@@ -1,9 +1,10 @@
 "use server";
 
 import { supabaseServer } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
+//ログイン
 export async function login(email: string, password: string) {
-  // ここに await を追加します
   const supabase = await supabaseServer();
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -13,3 +14,16 @@ export async function login(email: string, password: string) {
     throw error;
   }
 }
+
+//ログアウト
+export const logout = async () => {
+  const supabase = await supabaseServer();
+
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  redirect("/home");
+};

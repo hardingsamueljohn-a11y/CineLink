@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { searchMovies } from "@/lib/tmdb/api";
 import { supabaseServer } from "@/lib/supabase/server";
+import { logout } from "@/actions/auth";
 
 type HomePageProps = {
   searchParams: Promise<{
@@ -133,15 +134,33 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   myWishlistMovies.forEach((m) => movieMap.set(m.tmdb_id, m));
 
   return (
-    <main style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
+    
+<main style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
+      {/* ヘッダー */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "16px",
+        }}
+      >
+        <h1 style={{ fontSize: "28px", fontWeight: 700 }}>Home</h1>
+
+        {user && (
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <span style={{ fontSize: "12px", color: "#666" }}>ログイン中</span>
+
+            <form action={logout}>
+              <button type="submit">ログアウト</button>
+            </form>
+          </div>
+        )}
+      </div>
       {/* =========================
           検索セクション
       ========================= */}
       <section style={{ marginBottom: "24px" }}>
-        <h1 style={{ fontSize: "28px", fontWeight: 700, marginBottom: "12px" }}>
-          Home
-        </h1>
-
         <form action="/home" method="GET">
           <input
             name="q"
