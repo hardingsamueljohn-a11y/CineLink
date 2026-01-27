@@ -75,7 +75,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       if (followingIds.length > 0) {
         const { data: reviewsData } = await supabase
           .from("reviews")
-          .select("id, user_id, tmdb_id, rating, content, is_spoiler, created_at")
+          .select(
+            "id, user_id, tmdb_id, rating, content, is_spoiler, created_at",
+          )
           .in("user_id", followingIds)
           .order("created_at", { ascending: false })
           .limit(10);
@@ -134,8 +136,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   myWishlistMovies.forEach((m) => movieMap.set(m.tmdb_id, m));
 
   return (
-    
-<main style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
+    <main style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
       {/* ヘッダー */}
       <div
         style={{
@@ -147,13 +148,22 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       >
         <h1 style={{ fontSize: "28px", fontWeight: 700 }}>Home</h1>
 
-        {user && (
+        {user ? (
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <span style={{ fontSize: "12px", color: "#666" }}>ログイン中</span>
 
             <form action={logout}>
               <button type="submit">ログアウト</button>
             </form>
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: "12px" }}>
+            <Link href="/login">
+              <button>ログイン</button>
+            </Link>
+            <Link href="/signup">
+              <button>サインアップ</button>
+            </Link>
           </div>
         )}
       </div>
@@ -263,7 +273,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   <img
                     src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
                     alt={movie.title}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
                   />
                 ) : (
                   <span>NO IMAGE</span>
@@ -301,7 +315,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             タイムラインを見るにはログインが必要です。
           </p>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px" }}>
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px" }}
+          >
             {timelineReviews.length === 0 && timelineWishlists.length === 0 ? (
               <p style={{ color: "#666" }}>
                 まだアクティビティがありません（フォローしてみよう！）
@@ -394,7 +410,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </h2>
 
         {!user ? (
-          <p style={{ color: "#666" }}>観たい一覧を見るにはログインが必要です。</p>
+          <p style={{ color: "#666" }}>
+            観たい一覧を見るにはログインが必要です。
+          </p>
         ) : myWishlistRows.length === 0 ? (
           <p style={{ color: "#666" }}>
             まだ「観たい」がありません。映画詳細ページから追加してみよう！
