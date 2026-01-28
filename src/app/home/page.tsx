@@ -152,8 +152,43 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <span style={{ fontSize: "12px", color: "#666" }}>ログイン中</span>
 
+            {/* --- マイプロフィールボタン --- */}
+            <Link
+              href={`/profile/${user.id}`}
+              style={{ textDecoration: "none" }}
+              passHref
+            >
+              <button
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: "8px",
+                  border: "1px solid #333",
+                  background: "#fff",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                マイプロフィール
+              </button>
+            </Link>
+
             <form action={logout}>
-              <button type="submit">ログアウト</button>
+              <button
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: "8px",
+                  border: "1px solid #333",
+                  background: "#fff",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                }}
+              >
+                ログアウト
+              </button>
             </form>
           </div>
         ) : (
