@@ -49,6 +49,30 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   // --- 自分のプロフィールか ---
   const isMyProfile = user ? user.id === userId : false;
 
+  // --- Wishlist 取得（movies テーブルと join） ---
+  const { data: wishlistData } = await supabase
+    .from("wishlists")
+    .select(
+      `
+        tmdb_id,
+        movies (
+          title,
+          poster_path
+        )
+      `,
+    )
+    .eq("user_id", userId);
+
+  const wishlist = (wishlistData ?? []).map((row) => {
+    const movie = Array.isArray(row.movies) ? row.movies[0] : row.movies;
+
+    return {
+      tmdbId: row.tmdb_id,
+      title: movie?.title ?? "タイトル不明",
+      posterPath: movie?.poster_path ?? null,
+    };
+  });
+
   return (
     <main style={{ padding: "24px", maxWidth: "800px", margin: "0 auto" }}>
       <ProfileHeader
@@ -60,7 +84,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         followerCount={followerCount ?? 0}
         isMyProfile={isMyProfile}
       />
-      <ProfileTabs />
+      <ProfileTabs wishlist={wishlist} />
     </main>
   );
 }

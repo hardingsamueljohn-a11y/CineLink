@@ -1,10 +1,22 @@
 "use client";
 
 import { useState } from "react";
+// ここで作成済みの WishlistTab をインポートします
+import WishlistTab from "./WishlistTab"; 
+
+type WishlistItem = {
+  tmdbId: number;
+  title: string | null;
+  posterPath: string | null;
+};
 
 type TabType = "wishlist" | "reviews";
 
-export default function ProfileTabs() {
+type ProfileTabsProps = {
+  wishlist: WishlistItem[];
+};
+
+export default function ProfileTabs({ wishlist }: ProfileTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("wishlist");
 
   return (
@@ -59,9 +71,13 @@ export default function ProfileTabs() {
         }}
       >
         {activeTab === "wishlist" && (
-          <p style={{ color: "#666" }}>
-            観たい映画の一覧がここに表示されます。
-          </p>
+          <>
+            <p style={{ color: "#666", marginBottom: "12px" }}>
+              観たい映画：{wishlist.length} 件
+            </p>
+            {/* ここで WishlistTab を呼び出す */}
+            <WishlistTab wishlist={wishlist} />
+          </>
         )}
 
         {activeTab === "reviews" && (
