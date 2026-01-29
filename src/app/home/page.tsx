@@ -3,6 +3,7 @@ import { searchMovies } from "@/lib/tmdb/api";
 import { supabaseServer } from "@/lib/supabase/server";
 import { logout } from "@/actions/auth";
 import MovieCard from "@/components/movie/Card";
+import MovieGrid from "@/components/movie/Grid";
 
 type HomePageProps = {
   searchParams: Promise<{
@@ -271,13 +272,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <p style={{ color: "#666" }}>該当する映画が見つかりませんでした。</p>
         ) : null}
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-            gap: "12px",
-          }}
-        >
+        <MovieGrid>
           {movies.map((movie) => (
             <MovieCard
               key={movie.id}
@@ -288,7 +283,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               voteAverage={movie.vote_average}
             />
           ))}
-        </div>
+        </MovieGrid>
       </section>
 
       {/* =========================
