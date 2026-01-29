@@ -151,7 +151,7 @@ export default async function MovieDetailPage({
           {/* 操作ボタン */}
           <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
             <WishlistButton tmdbId={tmdbId} initialIsWished={initialIsWished} />
-            <ReviewButton tmdbId={tmdbId} isLoggedIn={!!user} />
+            <ReviewButton tmdbId={tmdbId} />
             <ShareButton tmdbId={tmdbId} />
           </div>
 

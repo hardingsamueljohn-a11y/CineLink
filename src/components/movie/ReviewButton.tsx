@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth"; 
 
 type ReviewButtonProps = {
   tmdbId: number;
-  isLoggedIn: boolean;
 };
 
 export default function ReviewButton({
   tmdbId,
-  isLoggedIn,
 }: ReviewButtonProps) {
+  const { isLoggedIn, loading } = useAuth(); 
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -19,13 +19,14 @@ export default function ReviewButton({
   const handleClick = () => {
     setErrorMessage("");
 
+    if (loading) return;
+
     if (!isLoggedIn) {
       setErrorMessage("ログインが必要です");
       return;
     }
 
     setIsLoading(true);
-
     router.push(`/movie/${tmdbId}/review`);
   };
 
@@ -33,17 +34,17 @@ export default function ReviewButton({
     <div>
       <button
         onClick={handleClick}
-        disabled={isLoading}
+        disabled={isLoading || loading} 
         style={{
           padding: "10px 14px",
           borderRadius: "10px",
           border: "1px solid #333",
           background: "#fff",
-          cursor: isLoading ? "not-allowed" : "pointer",
-          opacity: isLoading ? 0.6 : 1,
+          cursor: (isLoading || loading) ? "not-allowed" : "pointer",
+          opacity: (isLoading || loading) ? 0.6 : 1,
         }}
       >
-        レビューする
+        {loading ? "確認中..." : "レビューする"}
       </button>
 
       {errorMessage ? (
