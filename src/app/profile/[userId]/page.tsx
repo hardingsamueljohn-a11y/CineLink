@@ -73,6 +73,36 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     };
   });
 
+  // --- Reviews 取得（movies テーブルと join） ---
+  const { data: reviewsData } = await supabase
+    .from("reviews")
+    .select(`
+      id,
+      tmdb_id,
+      rating,
+      content,
+      is_spoiler,
+      created_at,
+      movies ( 
+        title 
+      )
+    `)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  const reviews = (reviewsData ?? []).map((row) => {
+    const movie = Array.isArray(row.movies) ? row.movies[0] : row.movies;
+    return {
+      id: row.id,
+      tmdbId: row.tmdb_id,
+      rating: row.rating,
+      content: row.content,
+      isSpoiler: row.is_spoiler,
+      createdAt: row.created_at,
+      movieTitle: movie?.title ?? "タイトル不明",
+    };
+  });
+
   return (
     <main style={{ padding: "24px", maxWidth: "800px", margin: "0 auto" }}>
       <ProfileHeader
@@ -84,7 +114,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         followerCount={followerCount ?? 0}
         isMyProfile={isMyProfile}
       />
-      <ProfileTabs wishlist={wishlist} />
+      <ProfileTabs wishlist={wishlist} reviews={reviews} />
     </main>
   );
 }

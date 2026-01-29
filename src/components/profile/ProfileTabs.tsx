@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-// ここで作成済みの WishlistTab をインポートします
 import WishlistTab from "./WishlistTab"; 
+import ReviewsTab from "./ReviewsTab"; 
 
 type WishlistItem = {
   tmdbId: number;
@@ -10,13 +10,24 @@ type WishlistItem = {
   posterPath: string | null;
 };
 
+type ReviewItem = {
+  id: string;
+  tmdbId: number;
+  rating: number;
+  content: string;
+  isSpoiler: boolean;
+  createdAt: string;
+  movieTitle: string;
+};
+
 type TabType = "wishlist" | "reviews";
 
 type ProfileTabsProps = {
   wishlist: WishlistItem[];
+  reviews: ReviewItem[]; 
 };
 
-export default function ProfileTabs({ wishlist }: ProfileTabsProps) {
+export default function ProfileTabs({ wishlist, reviews }: ProfileTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>("wishlist");
 
   return (
@@ -81,9 +92,13 @@ export default function ProfileTabs({ wishlist }: ProfileTabsProps) {
         )}
 
         {activeTab === "reviews" && (
-          <p style={{ color: "#666" }}>
-            投稿したレビューの一覧がここに表示されます。
-          </p>
+          <>
+            {/* 投稿したレビューを表示 */}
+            <p style={{ color: "#666", marginBottom: "12px" }}>
+              投稿したレビュー：{reviews.length} 件
+            </p>
+            <ReviewsTab reviews={reviews} />
+          </>
         )}
       </div>
     </section>
