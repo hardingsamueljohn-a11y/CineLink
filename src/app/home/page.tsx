@@ -2,6 +2,7 @@ import Link from "next/link";
 import { searchMovies } from "@/lib/tmdb/api";
 import { supabaseServer } from "@/lib/supabase/server";
 import { logout } from "@/actions/auth";
+import MovieCard from "@/components/movie/Card";
 
 type HomePageProps = {
   searchParams: Promise<{
@@ -278,61 +279,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           }}
         >
           {movies.map((movie) => (
-            <Link
+            <MovieCard
               key={movie.id}
-              href={`/movie/${movie.id}`}
-              style={{
-                display: "block",
-                border: "1px solid #ddd",
-                borderRadius: "12px",
-                overflow: "hidden",
-                textDecoration: "none",
-                color: "inherit",
-                background: "#fff",
-              }}
-            >
-              <div
-                style={{
-                  width: "100%",
-                  aspectRatio: "2 / 3",
-                  background: "#f2f2f2",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "12px",
-                  color: "#777",
-                }}
-              >
-                {movie.poster_path ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
-                    alt={movie.title}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  <span>NO IMAGE</span>
-                )}
-              </div>
-
-              <div style={{ padding: "10px" }}>
-                <p style={{ fontWeight: 700, marginBottom: "6px" }}>
-                  {movie.title}
-                </p>
-
-                <p style={{ fontSize: "12px", color: "#666" }}>
-                  公開日：{movie.release_date || "不明"}
-                </p>
-
-                <p style={{ fontSize: "12px", color: "#666" }}>
-                  TMDBスコア：{movie.vote_average?.toFixed(1) ?? "—"}
-                </p>
-              </div>
-            </Link>
+              id={movie.id}
+              title={movie.title}
+              posterPath={movie.poster_path}
+              releaseDate={movie.release_date}
+              voteAverage={movie.vote_average}
+            />
           ))}
         </div>
       </section>
