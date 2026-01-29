@@ -4,6 +4,7 @@ import WishlistButton from "@/components/movie/WishlistButton";
 import ReviewButton from "@/components/movie/ReviewButton";
 import ShareButton from "@/components/movie/ShareButton";
 import { supabaseServer } from "@/lib/supabase/server";
+import MovieHeader from "@/components/movie/Header";
 
 type MovieDetailPageProps = {
   params: Promise<{
@@ -98,70 +99,19 @@ export default async function MovieDetailPage({
       {/* =========================
           映画情報
       ========================= */}
-      <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
-        <div
-          style={{
-            width: "220px",
-            flexShrink: 0,
-            borderRadius: "12px",
-            overflow: "hidden",
-            border: "1px solid #ddd",
-            background: "#f2f2f2",
-          }}
-        >
-          {movie.poster_path ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
-              alt={movie.title}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          ) : (
-            <div
-              style={{
-                width: "100%",
-                height: "330px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#777",
-                fontSize: "12px",
-              }}
-            >
-              NO IMAGE
-            </div>
-          )}
+
+      <MovieHeader movie={movie}>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <WishlistButton tmdbId={tmdbId} initialIsWished={initialIsWished} />
+          <ReviewButton tmdbId={tmdbId} />
+          <ShareButton tmdbId={tmdbId} />
         </div>
-
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: "26px", fontWeight: 800 }}>{movie.title}</h1>
-
-          <p style={{ marginTop: "8px", color: "#666", fontSize: "14px" }}>
-            公開日：{movie.release_date || "不明"}
+        {!user && (
+          <p style={{ marginTop: "12px", color: "#666", fontSize: "12px" }}>
+            ※観たい機能とレビュー機能を使うにはログインが必要です
           </p>
-
-          <p style={{ marginTop: "6px", color: "#666", fontSize: "14px" }}>
-            TMDBスコア：{movie.vote_average?.toFixed(1) ?? "—"}
-          </p>
-
-          <p style={{ marginTop: "16px", lineHeight: 1.7 }}>
-            {movie.overview || "あらすじがありません。"}
-          </p>
-
-          {/* 操作ボタン */}
-          <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
-            <WishlistButton tmdbId={tmdbId} initialIsWished={initialIsWished} />
-            <ReviewButton tmdbId={tmdbId} />
-            <ShareButton tmdbId={tmdbId} />
-          </div>
-
-          {!user ? (
-            <p style={{ marginTop: "12px", color: "#666", fontSize: "12px" }}>
-              ※観たい機能とレビュー機能を使うにはログインが必要です
-            </p>
-          ) : null}
-        </div>
-      </div>
+        )}
+      </MovieHeader>
 
       {/* =========================
           レビュー一覧

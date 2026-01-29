@@ -398,75 +398,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             観たい一覧を見るにはログインが必要です。
           </p>
         ) : myWishlistRows.length === 0 ? (
-          <p style={{ color: "#666" }}>
-            まだ「観たい」がありません。映画詳細ページから追加してみよう！
-          </p>
+          <p style={{ color: "#666" }}>まだ「観たい」がありません。</p>
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-              gap: "12px",
-            }}
-          >
+          <MovieGrid>
             {myWishlistRows.map((item) => {
               const movie = movieMap.get(item.tmdb_id);
-
               return (
-                <Link
+                <MovieCard
                   key={`${item.tmdb_id}-${item.created_at}`}
-                  href={`/movie/${item.tmdb_id}`}
-                  style={{
-                    display: "block",
-                    border: "1px solid #ddd",
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    textDecoration: "none",
-                    color: "inherit",
-                    background: "#fff",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "100%",
-                      aspectRatio: "2 / 3",
-                      background: "#f2f2f2",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "12px",
-                      color: "#777",
-                    }}
-                  >
-                    {movie?.poster_path ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
-                        alt={movie.title}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    ) : (
-                      <span>NO IMAGE</span>
-                    )}
-                  </div>
-
-                  <div style={{ padding: "10px" }}>
-                    <p style={{ fontWeight: 700, marginBottom: "6px" }}>
-                      {movie?.title ?? "タイトル不明"}
-                    </p>
-
-                    <p style={{ fontSize: "12px", color: "#666" }}>
-                      status：{item.status}
-                    </p>
-                  </div>
-                </Link>
+                  id={item.tmdb_id}
+                  title={movie?.title ?? "タイトル不明"}
+                  posterPath={movie?.poster_path ?? null}
+                />
               );
             })}
-          </div>
+          </MovieGrid>
         )}
       </section>
     </main>
