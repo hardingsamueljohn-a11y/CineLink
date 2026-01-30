@@ -1,6 +1,7 @@
 import { supabaseServer } from "@/lib/supabase/server";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
+import BackButton from "@/components/movie/BackButton";
 
 type ProfilePageProps = {
   params: Promise<{
@@ -76,7 +77,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   // --- Reviews 取得（movies テーブルと join） ---
   const { data: reviewsData } = await supabase
     .from("reviews")
-    .select(`
+    .select(
+      `
       id,
       tmdb_id,
       rating,
@@ -86,7 +88,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       movies ( 
         title 
       )
-    `)
+    `,
+    )
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -105,6 +108,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   return (
     <main style={{ padding: "24px", maxWidth: "800px", margin: "0 auto" }}>
+      <div style={{ marginBottom: "20px" }}>
+        <BackButton />
+      </div>
+
       <ProfileHeader
         userId={profile.id}
         username={profile.username}

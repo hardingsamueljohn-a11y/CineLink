@@ -5,6 +5,7 @@ import ReviewButton from "@/components/movie/ReviewButton";
 import ShareButton from "@/components/movie/ShareButton";
 import { supabaseServer } from "@/lib/supabase/server";
 import MovieHeader from "@/components/movie/Header";
+import BackButton from "@/components/movie/BackButton";
 
 type MovieDetailPageProps = {
   params: Promise<{
@@ -35,9 +36,7 @@ export default async function MovieDetailPage({
     return (
       <main style={{ padding: "24px" }}>
         <p>不正な映画IDです。</p>
-        <Link href="/home" style={{ textDecoration: "underline" }}>
-          /homeへ戻る
-        </Link>
+        <BackButton />
       </main>
     );
   }
@@ -89,12 +88,9 @@ export default async function MovieDetailPage({
 
   return (
     <main style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
-      <Link
-        href="/home"
-        style={{ textDecoration: "underline", display: "inline-block" }}
-      >
-        ← Homeへ戻る
-      </Link>
+      <div style={{ marginBottom: "8px" }}>
+        <BackButton />
+      </div>
 
       {/* =========================
           映画情報
