@@ -34,7 +34,7 @@ export const addToWishlist = async (tmdbId: number) => {
     const { error: movieInsertError } = await supabase.from("movies").upsert({
       tmdb_id: movieDetail.id,
       title: movieDetail.title,
-      poster_path: movieDetail.poster_path,
+      poster_path: movieDetail.posterPath,
     });
 
     if (movieInsertError) {
