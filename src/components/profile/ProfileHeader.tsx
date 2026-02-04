@@ -1,5 +1,7 @@
 "use client";
 
+import FollowButton from "@/components/profile/FollowButton"; 
+
 type ProfileHeaderProps = {
   userId: string;
   username: string | null;
@@ -8,15 +10,20 @@ type ProfileHeaderProps = {
   followingCount: number;
   followerCount: number;
   isMyProfile: boolean;
+  currentUserId?: string;
+  initialIsFollowing: boolean;
 };
 
 export default function ProfileHeader({
+  userId, // 相手のID
   username,
   avatarUrl,
   bio,
   followingCount,
   followerCount,
   isMyProfile,
+  currentUserId, // 自分のID
+  initialIsFollowing,
 }: ProfileHeaderProps) {
   return (
     <section
@@ -87,21 +94,13 @@ export default function ProfileHeader({
           </div>
         </div>
 
-        {/* Follow Button (仮) */}
-        {!isMyProfile && (
-          <button
-            style={{
-              padding: "8px 14px",
-              borderRadius: "10px",
-              border: "1px solid #333",
-              background: "#fff",
-              cursor: "pointer",
-              fontSize: "13px",
-              height: "fit-content",
-            }}
-          >
-            フォロー
-          </button>
+        {/* Follow Button */}
+        {!isMyProfile && currentUserId && (
+          <FollowButton
+            followerId={currentUserId}
+            followingId={userId}
+            initialIsFollowing={initialIsFollowing}
+          />
         )}
       </div>
     </section>
