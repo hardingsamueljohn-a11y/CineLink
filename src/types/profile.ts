@@ -14,3 +14,10 @@ export type FollowState = {
   followingCount: number;
   followerCount: number;
 };
+
+//検索結果などで使用するユーザーの簡易情報型
+export type SearchUser = {
+  id: string;
+  username: string | null;
+  avatar_url: string | null;
+};
