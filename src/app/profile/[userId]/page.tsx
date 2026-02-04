@@ -50,6 +50,18 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   // --- 自分のプロフィールか ---
   const isMyProfile = user ? user.id === userId : false;
 
+  // --- フォロー状態の取得 ---
+  let isFollowing = false;
+  if (user && !isMyProfile) {
+    const { data: followData } = await supabase
+      .from("follows")
+      .select("*")
+      .eq("follower_id", user.id)
+      .eq("following_id", userId)
+      .maybeSingle();
+    isFollowing = !!followData;
+  }
+
   // --- Wishlist 取得（movies テーブルと join） ---
   const { data: wishlistData } = await supabase
     .from("wishlists")
@@ -120,7 +132,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         followingCount={followingCount ?? 0}
         followerCount={followerCount ?? 0}
         isMyProfile={isMyProfile}
+        currentUserId={user?.id}
+        initialIsFollowing={isFollowing}
       />
+
       <ProfileTabs wishlist={wishlist} reviews={reviews} />
     </main>
   );
