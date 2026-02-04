@@ -1,12 +1,13 @@
 "use client";
 
 import FollowButton from "@/components/profile/FollowButton"; 
+import { Profile } from "@/types/profile";
 
 type ProfileHeaderProps = {
   userId: string;
-  username: string | null;
-  avatarUrl: string | null;
-  bio: string | null;
+  username: Profile["username"]; 
+  avatarUrl: Profile["avatar_url"];
+  bio: Profile["bio"];
   followingCount: number;
   followerCount: number;
   isMyProfile: boolean;

@@ -1,18 +1,12 @@
 import Link from "next/link";
 import ReviewForm from "@/components/review/ReviewForm";
 import { supabaseServer } from "@/lib/supabase/server";
+import { Review } from "@/types/review";
 
 type ReviewPageProps = {
   params: Promise<{
     id: string;
   }>;
-};
-
-type ExistingReview = {
-  id: string;
-  rating: number;
-  content: string;
-  is_spoiler: boolean;
 };
 
 export default async function ReviewPage({ params }: ReviewPageProps) {
@@ -36,19 +30,27 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let existingReview: ExistingReview | null = null;
+  let existingReview: Review | null = null;
 
-  // ✅ ログインしている場合だけ、自分のレビューがあるか探す
+  //✅ ログインしている場合だけ、自分のレビューがあるか探す
   if (user) {
     const { data, error } = await supabase
       .from("reviews")
-      .select("id, rating, content, is_spoiler")
+      .select("id, user_id, tmdb_id, rating, content, is_spoiler, created_at")
       .eq("tmdb_id", tmdbId)
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (!error && data) {
-      existingReview = data as ExistingReview;
+      existingReview = {
+        id: data.id,
+        userId: data.user_id,
+        tmdbId: data.tmdb_id,
+        rating: data.rating,
+        content: data.content,
+        isSpoiler: data.is_spoiler,
+        createdAt: data.created_at,
+      };
     }
   }
 

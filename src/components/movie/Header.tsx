@@ -1,11 +1,7 @@
+import { Movie } from "@/types/movie";
+
 type MovieHeaderProps = {
-  movie: {
-    title: string;
-    poster_path: string | null;
-    release_date: string;
-    vote_average: number;
-    overview: string;
-  };
+movie: Movie;
   children?: React.ReactNode;
 };
 
@@ -23,10 +19,10 @@ export default function MovieHeader({ movie, children }: MovieHeaderProps) {
           background: "#f2f2f2",
         }}
       >
-        {movie.poster_path ? (
+        {movie.posterPath ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
-            src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
+            src={`https://image.tmdb.org/t/p/w342${movie.posterPath}`}
             alt={movie.title}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
@@ -52,11 +48,11 @@ export default function MovieHeader({ movie, children }: MovieHeaderProps) {
         <h1 style={{ fontSize: "26px", fontWeight: 800 }}>{movie.title}</h1>
 
         <p style={{ marginTop: "8px", color: "#666", fontSize: "14px" }}>
-          公開日：{movie.release_date || "不明"}
+          公開日：{movie.releaseDate || "不明"}
         </p>
 
         <p style={{ marginTop: "6px", color: "#666", fontSize: "14px" }}>
-          TMDBスコア：{movie.vote_average?.toFixed(1) ?? "—"}
+          TMDBスコア：{movie.voteAverage?.toFixed(1) ?? "—"}
         </p>
 
         <p style={{ marginTop: "16px", lineHeight: 1.7 }}>

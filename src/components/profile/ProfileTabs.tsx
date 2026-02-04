@@ -3,6 +3,7 @@
 import { useState } from "react";
 import WishlistTab from "./WishlistTab"; 
 import ReviewsTab from "./ReviewsTab"; 
+import { Review } from "@/types/review";
 
 type WishlistItem = {
   tmdbId: number;
@@ -10,21 +11,11 @@ type WishlistItem = {
   posterPath: string | null;
 };
 
-type ReviewItem = {
-  id: string;
-  tmdbId: number;
-  rating: number;
-  content: string;
-  isSpoiler: boolean;
-  createdAt: string;
-  movieTitle: string;
-};
-
 type TabType = "wishlist" | "reviews";
 
 type ProfileTabsProps = {
   wishlist: WishlistItem[];
-  reviews: ReviewItem[]; 
+  reviews: Review[];
 };
 
 export default function ProfileTabs({ wishlist, reviews }: ProfileTabsProps) {

@@ -1,19 +1,10 @@
 "use client";
 
 import Link from "next/link";
-
-type ReviewItem = {
-  id: string;
-  tmdbId: number;
-  rating: number;
-  content: string;
-  isSpoiler: boolean;
-  createdAt: string;
-  movieTitle: string;
-};
+import { Review } from "@/types/review";
 
 type ReviewsTabProps = {
-  reviews: ReviewItem[];
+  reviews: Review[]; 
 };
 
 export default function ReviewsTab({ reviews }: ReviewsTabProps) {

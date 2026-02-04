@@ -2,26 +2,24 @@
 
 import { useState } from "react";
 import { createReview, updateReview, deleteReview } from "@/actions/reviews";
-
-type ExistingReview = {
-  id: string;
-  rating: number;
-  content: string;
-  is_spoiler: boolean;
-};
+import { Review } from "@/types/review";
 
 type ReviewFormProps = {
   tmdbId: number;
-  existingReview: ExistingReview | null;
+  movieTitle?: string;
+  existingReview: Review | null; 
 };
 
-export default function ReviewForm({ tmdbId, existingReview }: ReviewFormProps) {
+export default function ReviewForm({
+  tmdbId,
+  existingReview,
+}: ReviewFormProps) {
   const isEditMode = !!existingReview;
 
   const [rating, setRating] = useState<number>(existingReview?.rating ?? 5);
   const [content, setContent] = useState<string>(existingReview?.content ?? "");
   const [isSpoiler, setIsSpoiler] = useState<boolean>(
-    existingReview?.is_spoiler ?? false
+    existingReview?.isSpoiler ?? false, 
   );
 
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +31,7 @@ export default function ReviewForm({ tmdbId, existingReview }: ReviewFormProps) 
     setErrorMessage("");
 
     try {
-      if (isEditMode) {
+      if (isEditMode && existingReview) {
         await updateReview({
           reviewId: existingReview.id,
           tmdbId,
@@ -159,11 +157,7 @@ export default function ReviewForm({ tmdbId, existingReview }: ReviewFormProps) 
               opacity: isLoading ? 0.6 : 1,
             }}
           >
-            {isLoading
-              ? "処理中..."
-              : isEditMode
-              ? "更新する"
-              : "投稿する"}
+            {isLoading ? "処理中..." : isEditMode ? "更新する" : "投稿する"}
           </button>
 
           {isEditMode ? (
@@ -186,9 +180,7 @@ export default function ReviewForm({ tmdbId, existingReview }: ReviewFormProps) 
           ) : null}
 
           {errorMessage ? (
-            <p style={{ color: "crimson", fontSize: "12px" }}>
-              {errorMessage}
-            </p>
+            <p style={{ color: "crimson", fontSize: "12px" }}>{errorMessage}</p>
           ) : null}
         </div>
       </form>
