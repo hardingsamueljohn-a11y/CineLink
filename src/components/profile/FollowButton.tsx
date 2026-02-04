@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { followUser, unfollowUser } from "@/actions/follows";
+import { FollowState } from "@/types/profile";
 
 type FollowButtonProps = {
-  followerId: string;    // 自分のID
-  followingId: string;   // 相手のID
-  initialIsFollowing: boolean;
+  followerId: string; // 自分のID
+  followingId: string; // 相手のID
+  initialIsFollowing: FollowState["isFollowing"];
 };
 
 export default function FollowButton({
@@ -31,7 +32,7 @@ export default function FollowButton({
       await followUser(followerId, followingId);
       setIsFollowing(true);
     }
-    
+
     setLoading(false);
   };
 
@@ -49,7 +50,11 @@ export default function FollowButton({
         border: "1px solid #000",
       }}
     >
-      {loading ? "読み込み中..." : isFollowing ? "フォロー解除" : "フォローする"}
+      {loading
+        ? "読み込み中..."
+        : isFollowing
+          ? "フォロー解除"
+          : "フォローする"}
     </button>
   );
 }

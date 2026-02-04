@@ -6,6 +6,8 @@ import { addToWishlist, removeFromWishlist } from "@/actions/wishlists";
 type WishlistButtonProps = {
   tmdbId: number;
   initialIsWished: boolean;
+  movieTitle: string;   
+  posterPath: string | null;
 };
 
 export default function WishlistButton({

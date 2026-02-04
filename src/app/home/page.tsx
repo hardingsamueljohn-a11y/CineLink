@@ -4,42 +4,13 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { logout } from "@/actions/auth";
 import MovieCard from "@/components/movie/Card";
 import MovieGrid from "@/components/movie/Grid";
+import { Review } from "@/types/review";
+import { Database } from "@/types/supabase";
 
 type HomePageProps = {
   searchParams: Promise<{
     q?: string;
   }>;
-};
-
-type ActivityReview = {
-  id: string;
-  user_id: string;
-  tmdb_id: number;
-  rating: number;
-  content: string;
-  is_spoiler: boolean;
-  created_at: string;
-};
-
-type ActivityWishlist = {
-  user_id: string;
-  tmdb_id: number;
-  status: string;
-  created_at: string;
-};
-
-// wishlists の生データ（自分の観たい一覧用）
-type MyWishlistRow = {
-  tmdb_id: number;
-  status: string;
-  created_at: string;
-};
-
-// movies テーブルの表示用データ
-type MovieRow = {
-  tmdb_id: number;
-  title: string;
-  poster_path: string | null;
 };
 
 export default async function HomePage({ searchParams }: HomePageProps) {
@@ -62,8 +33,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // =========================
   // アクティビティ（タイムライン）
   // =========================
-  let timelineReviews: ActivityReview[] = [];
-  let timelineWishlists: ActivityWishlist[] = [];
+  let timelineReviews: Review[] = [];
+  let timelineWishlists: Database["public"]["Tables"]["wishlists"]["Row"][] =
+    [];
 
   if (user) {
     const { data: followsData, error: followsError } = await supabase
@@ -84,16 +56,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           .order("created_at", { ascending: false })
           .limit(10);
 
-        timelineReviews = (reviewsData ?? []) as ActivityReview[];
+        timelineReviews = (reviewsData ?? []).map((r) => ({
+          id: r.id,
+          userId: r.user_id,
+          tmdbId: r.tmdb_id,
+          rating: r.rating,
+          content: r.content,
+          isSpoiler: r.is_spoiler,
+          createdAt: r.created_at,
+        }));
 
         const { data: wishlistsData } = await supabase
           .from("wishlists")
-          .select("user_id, tmdb_id, status, created_at")
+          .select("*")
           .in("user_id", followingIds)
           .order("created_at", { ascending: false })
           .limit(10);
 
-        timelineWishlists = (wishlistsData ?? []) as ActivityWishlist[];
+        timelineWishlists = wishlistsData ?? [];
       }
     }
   }
@@ -101,20 +81,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // =========================
   // 自分の観たい一覧（JOINに依存しない安全版）
   // =========================
-  let myWishlistRows: MyWishlistRow[] = [];
+
+  type WishlistRow = Database["public"]["Tables"]["wishlists"]["Row"];
+  type MovieRow = Database["public"]["Tables"]["movies"]["Row"];
+
+  let myWishlistRows: WishlistRow[] = [];
   let myWishlistMovies: MovieRow[] = [];
 
   if (user) {
     // ① 自分の wishlists を取得
     const { data: wishlistData, error: wishlistError } = await supabase
       .from("wishlists")
-      .select("tmdb_id, status, created_at")
+      .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20);
 
     if (!wishlistError) {
-      myWishlistRows = (wishlistData ?? []) as MyWishlistRow[];
+      myWishlistRows = wishlistData ?? [];
 
       // ② tmdb_id の一覧を作る
       const tmdbIds = myWishlistRows.map((w) => w.tmdb_id);
@@ -123,11 +107,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       if (tmdbIds.length > 0) {
         const { data: moviesData, error: moviesError } = await supabase
           .from("movies")
-          .select("tmdb_id, title, poster_path")
+          .select("*")
           .in("tmdb_id", tmdbIds);
 
         if (!moviesError) {
-          myWishlistMovies = (moviesData ?? []) as MovieRow[];
+          myWishlistMovies = moviesData ?? [];
         }
       }
     }
@@ -204,6 +188,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
         )}
       </div>
+
       {/* =========================
           検索セクション
       ========================= */}
@@ -278,9 +263,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               key={movie.id}
               id={movie.id}
               title={movie.title}
-              posterPath={movie.poster_path}
-              releaseDate={movie.release_date}
-              voteAverage={movie.vote_average}
+              posterPath={movie.posterPath}
+              releaseDate={movie.releaseDate}
+              voteAverage={movie.voteAverage}
             />
           ))}
         </MovieGrid>
@@ -320,22 +305,22 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 }}
               >
                 <p style={{ fontWeight: 700, marginBottom: "6px" }}>
-                  レビュー（ユーザー: {review.user_id.slice(0, 8)}...）
+                  レビュー（ユーザー: {review.userId.slice(0, 8)}...）
                 </p>
 
                 <p style={{ fontSize: "12px", color: "#666" }}>
-                  tmdb_id: {review.tmdb_id} / 評価: {review.rating}
+                  tmdb_id: {review.tmdbId} / 評価: {review.rating}
                 </p>
 
                 <p style={{ marginTop: "8px", whiteSpace: "pre-wrap" }}>
-                  {review.is_spoiler
+                  {review.isSpoiler
                     ? "※ネタバレあり（内容は隠しています）"
                     : review.content}
                 </p>
 
                 <div style={{ marginTop: "8px" }}>
                   <Link
-                    href={`/movie/${review.tmdb_id}`}
+                    href={`/movie/${review.tmdbId}`}
                     style={{
                       textDecoration: "underline",
                       fontSize: "12px",

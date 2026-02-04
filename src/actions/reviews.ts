@@ -32,7 +32,7 @@ export const createReview = async (input: CreateReviewInput) => {
     throw new Error("ログインが必要です");
   }
 
-  // --- バリデーション（最小） ---
+  // --- バリデーション ---
   if (!input.tmdbId || Number.isNaN(input.tmdbId)) {
     throw new Error("不正な映画IDです");
   }
@@ -50,7 +50,7 @@ export const createReview = async (input: CreateReviewInput) => {
     throw new Error("レビュー本文は1000文字以内にしてください");
   }
 
-  // ✅ すでに同じ映画にレビューしていないかチェック（重複防止）
+  // ✅ 重複チェック
   const { data: existingReview, error: reviewCheckError } = await supabase
     .from("reviews")
     .select("id")
@@ -66,7 +66,7 @@ export const createReview = async (input: CreateReviewInput) => {
     throw new Error("この映画にはすでにレビューを投稿しています");
   }
 
-  // ✅ 外部キー対策：movies がなければ作っておく
+  // ✅ 外部キー対策
   const { data: existingMovie, error: movieSelectError } = await supabase
     .from("movies")
     .select("tmdb_id")
@@ -83,7 +83,7 @@ export const createReview = async (input: CreateReviewInput) => {
     const { error: movieUpsertError } = await supabase.from("movies").upsert({
       tmdb_id: movieDetail.id,
       title: movieDetail.title,
-      poster_path: movieDetail.poster_path,
+      poster_path: movieDetail.posterPath, 
     });
 
     if (movieUpsertError) {
@@ -143,7 +143,7 @@ export const updateReview = async (input: UpdateReviewInput) => {
     throw new Error("レビュー本文は1000文字以内にしてください");
   }
 
-  // ✅ 自分のレビューだけ更新できるように user_id も条件に入れる
+ // ✅ 自分のレビューだけ更新できるように user_id も条件に入れる
   const { error: updateError } = await supabase
     .from("reviews")
     .update({
@@ -180,7 +180,7 @@ export const deleteReview = async (reviewId: string, tmdbId: number) => {
     throw new Error("不正なレビューIDです");
   }
 
-  // ✅ 自分のレビューだけ削除できるように user_id も条件に入れる
+    // ✅ 自分のレビューだけ削除できるように user_id も条件に入れる
   const { error: deleteError } = await supabase
     .from("reviews")
     .delete()

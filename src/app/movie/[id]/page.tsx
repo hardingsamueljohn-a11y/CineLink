@@ -6,6 +6,7 @@ import ShareButton from "@/components/movie/ShareButton";
 import { supabaseServer } from "@/lib/supabase/server";
 import MovieHeader from "@/components/movie/Header";
 import BackButton from "@/components/movie/BackButton";
+import { Review } from "@/types/review";
 
 type MovieDetailPageProps = {
   params: Promise<{
@@ -13,17 +14,15 @@ type MovieDetailPageProps = {
   }>;
 };
 
-type ReviewRow = {
-  id: string;
-  user_id: string;
-  tmdb_id: number;
-  rating: number;
-  content: string;
-  is_spoiler: boolean;
-  created_at: string;
-  profiles: {
-    username: string | null;
-  }[];
+type ReviewWithProfile = Review & {
+  profiles:
+    | {
+        username: string | null;
+      }
+    | {
+        username: string | null;
+      }[]
+    | null;
 };
 
 export default async function MovieDetailPage({
@@ -84,7 +83,19 @@ export default async function MovieDetailPage({
     .eq("tmdb_id", tmdbId)
     .order("created_at", { ascending: false });
 
-  const reviews = !reviewsError ? ((reviewsData ?? []) as ReviewRow[]) : [];
+  const reviews: ReviewWithProfile[] =
+    !reviewsError && reviewsData
+      ? reviewsData.map((r) => ({
+          id: r.id,
+          userId: r.user_id,
+          tmdbId: r.tmdb_id,
+          rating: r.rating,
+          content: r.content,
+          isSpoiler: r.is_spoiler,
+          createdAt: r.created_at,
+          profiles: r.profiles as ReviewWithProfile["profiles"],
+        }))
+      : [];
 
   return (
     <main style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
@@ -98,7 +109,12 @@ export default async function MovieDetailPage({
 
       <MovieHeader movie={movie}>
         <div style={{ display: "flex", gap: "10px" }}>
-          <WishlistButton tmdbId={tmdbId} initialIsWished={initialIsWished} />
+          <WishlistButton
+            tmdbId={tmdbId}
+            initialIsWished={initialIsWished}
+            movieTitle={movie.title} 
+            posterPath={movie.posterPath} 
+          />
           <ReviewButton tmdbId={tmdbId} />
           <ShareButton tmdbId={tmdbId} />
         </div>
@@ -122,8 +138,12 @@ export default async function MovieDetailPage({
         ) : (
           <div style={{ display: "grid", gap: "12px" }}>
             {reviews.map((review) => {
-              const username = review.profiles?.[0]?.username ?? "Unknown";
-              const isMyReview = user ? review.user_id === user.id : false;
+              const profileData = Array.isArray(review.profiles)
+                ? review.profiles[0]
+                : review.profiles;
+
+              const username = profileData?.username ?? "Unknown";
+              const isMyReview = user ? review.userId === user.id : false;
 
               return (
                 <div
@@ -163,11 +183,11 @@ export default async function MovieDetailPage({
 
                   <p style={{ fontSize: "12px", color: "#666" }}>
                     投稿日：
-                    {new Date(review.created_at).toLocaleString("ja-JP")}
+                    {new Date(review.createdAt).toLocaleString("ja-JP")}
                   </p>
 
                   <p style={{ marginTop: "10px", whiteSpace: "pre-wrap" }}>
-                    {review.is_spoiler
+                    {review.isSpoiler
                       ? "※ネタバレあり（内容は非表示）"
                       : review.content}
                   </p>

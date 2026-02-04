@@ -1,7 +1,10 @@
-type TmdbMovie = {
+import { Movie } from "@/types/movie";
+
+type TmdbMovieResponse = {
   id: number;
   title: string;
   poster_path: string | null;
+  backdrop_path: string | null; 
   overview: string;
   release_date: string;
   vote_average: number;
@@ -9,7 +12,7 @@ type TmdbMovie = {
 
 type SearchMoviesResponse = {
   page: number;
-  results: TmdbMovie[];
+  results: TmdbMovieResponse[];
   total_pages: number;
   total_results: number;
 };
@@ -17,15 +20,27 @@ type SearchMoviesResponse = {
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 /**
- * TMDBの映画検索（/search/movie）
- * @param query 検索キーワード
+ * 生のTMDBデータを共通型 Movie にマッピングする
  */
-export const searchMovies = async (query: string): Promise<TmdbMovie[]> => {
+const mapToMovie = (data: TmdbMovieResponse): Movie => ({
+  id: data.id,
+  title: data.title,
+  posterPath: data.poster_path,
+  backdropPath: data.backdrop_path, 
+  overview: data.overview,
+  releaseDate: data.release_date,
+  voteAverage: data.vote_average,
+});
+
+/**
+ * TMDBの映画検索
+ */
+export const searchMovies = async (query: string): Promise<Movie[]> => {
   if (!query.trim()) return [];
 
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) {
-    throw new Error("TMDB_API_KEY is missing. Please set it in .env.local");
+    throw new Error("TMDB_API_KEY is missing.");
   }
 
   const url = new URL(`${TMDB_BASE_URL}/search/movie`);
@@ -40,21 +55,20 @@ export const searchMovies = async (query: string): Promise<TmdbMovie[]> => {
   });
 
   if (!res.ok) {
-    throw new Error(`TMDB search failed: ${res.status} ${res.statusText}`);
+    throw new Error(`TMDB search failed: ${res.status}`);
   }
 
   const data = (await res.json()) as SearchMoviesResponse;
-  return data.results ?? [];
+  return (data.results ?? []).map(mapToMovie);
 };
 
 /**
- * TMDBの映画詳細取得（/movie/{movie_id}）
- * @param tmdbId TMDBの映画ID
+ * TMDBの映画詳細取得
  */
-export const getMovieDetail = async (tmdbId: number): Promise<TmdbMovie> => {
+export const getMovieDetail = async (tmdbId: number): Promise<Movie> => {
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) {
-    throw new Error("TMDB_API_KEY is missing. Please set it in .env.local");
+    throw new Error("TMDB_API_KEY is missing.");
   }
 
   const url = new URL(`${TMDB_BASE_URL}/movie/${tmdbId}`);
@@ -67,11 +81,9 @@ export const getMovieDetail = async (tmdbId: number): Promise<TmdbMovie> => {
   });
 
   if (!res.ok) {
-    throw new Error(
-      `TMDB movie detail failed: ${res.status} ${res.statusText}`
-    );
+    throw new Error(`TMDB movie detail failed: ${res.status}`);
   }
 
-  const data = (await res.json()) as TmdbMovie;
-  return data;
+  const data = (await res.json()) as TmdbMovieResponse;
+  return mapToMovie(data);
 };

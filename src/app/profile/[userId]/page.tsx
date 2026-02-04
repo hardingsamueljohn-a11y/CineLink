@@ -2,6 +2,8 @@ import { supabaseServer } from "@/lib/supabase/server";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import BackButton from "@/components/movie/BackButton";
+import { Profile } from "@/types/profile";
+import { Review } from "@/types/review";
 
 type ProfilePageProps = {
   params: Promise<{
@@ -21,11 +23,13 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   } = await supabase.auth.getUser();
 
   // --- プロフィール取得 ---
-  const { data: profile, error: profileError } = await supabase
+  const { data, error: profileError } = await supabase
     .from("profiles")
     .select("id, username, avatar_url, bio")
     .eq("id", userId)
     .single();
+
+  const profile = data as Profile | null;
 
   if (profileError || !profile) {
     return (
@@ -105,10 +109,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
-  const reviews = (reviewsData ?? []).map((row) => {
+  const reviews: Review[] = (reviewsData ?? []).map((row) => {
     const movie = Array.isArray(row.movies) ? row.movies[0] : row.movies;
     return {
       id: row.id,
+      userId: userId,
       tmdbId: row.tmdb_id,
       rating: row.rating,
       content: row.content,
