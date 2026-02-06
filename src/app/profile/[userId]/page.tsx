@@ -4,16 +4,22 @@ import ProfileTabs from "@/components/profile/ProfileTabs";
 import BackButton from "@/components/movie/BackButton";
 import { Profile } from "@/types/profile";
 import { Review } from "@/types/review";
+import { searchUsers } from "@/actions/profile"; 
+import Link from "next/link"; 
 
 type ProfilePageProps = {
   params: Promise<{
     userId: string;
   }>;
+
+  searchParams: Promise<{
+    user_q?: string;
+  }>;
 };
 
-export default async function ProfilePage({ params }: ProfilePageProps) {
-  // params は Promise
+export default async function ProfilePage({ params, searchParams }: ProfilePageProps) {
   const { userId } = await params;
+  const { user_q } = await searchParams; // 検索クエリを取得
 
   const supabase = await supabaseServer();
 
@@ -21,6 +27,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // --- ユーザー検索の実行 (自分のプロフィールの時のみ有効) ---
+  const foundUsers = user_q ? await searchUsers(user_q) : [];
 
   // --- プロフィール取得 ---
   const { data, error: profileError } = await supabase
@@ -140,6 +149,43 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         currentUserId={user?.id}
         initialIsFollowing={isFollowing}
       />
+
+      {/* 自分のプロフィールの時のみ「友人検索」を表示 */}
+      {isMyProfile && (
+        <section style={{ margin: "32px 0", padding: "20px", border: "1px solid #eee", borderRadius: "12px", background: "#fcfcfc" }}>
+          <h3 style={{ fontSize: "16px", fontWeight: 700, marginBottom: "12px" }}>友人を検索</h3>
+          <form action={`/profile/${userId}`} method="GET" style={{ display: "flex", gap: "8px" }}>
+            <input
+              name="user_q"
+              defaultValue={user_q}
+              placeholder="ユーザー名を入力..."
+              style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid #ccc" }}
+            />
+            <button type="submit" style={{ padding: "10px 16px", background: "#333", color: "#fff", borderRadius: "8px", cursor: "pointer" }}>
+              検索
+            </button>
+          </form>
+
+          {/* 検索結果 */}
+          {user_q && (
+            <div style={{ marginTop: "16px" }}>
+              {foundUsers.length === 0 ? (
+                <p style={{ fontSize: "14px", color: "#666" }}>見つかりませんでした</p>
+              ) : (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {foundUsers.map((u) => (
+                    <Link key={u.id} href={`/profile/${u.id}`} style={{ textDecoration: "none" }}>
+                      <div style={{ padding: "8px 12px", background: "#fff", border: "1px solid #ddd", borderRadius: "20px", fontSize: "13px", color: "#333" }}>
+                        @{u.username}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       <ProfileTabs wishlist={wishlist} reviews={reviews} />
     </main>
