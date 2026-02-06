@@ -6,7 +6,6 @@ import ShareButton from "@/components/movie/ShareButton";
 import { supabaseServer } from "@/lib/supabase/server";
 import MovieHeader from "@/components/movie/Header";
 import BackButton from "@/components/movie/BackButton";
-import { Review } from "@/types/review";
 
 type MovieDetailPageProps = {
   params: Promise<{
@@ -14,15 +13,34 @@ type MovieDetailPageProps = {
   }>;
 };
 
-type ReviewWithProfile = Review & {
-  profiles:
-    | {
-        username: string | null;
-      }
-    | {
-        username: string | null;
-      }[]
-    | null;
+// 内部用：DBから取得される生の型
+interface DbReviewResponse {
+  id: string;
+  user_id: string;
+  tmdb_id: number;
+  rating: number;
+  content: string;
+  is_spoiler: boolean;
+  created_at: string;
+  profiles: {
+    username: string | null;
+  } | {
+    username: string | null;
+  }[] | null;
+}
+
+// 内部用：画面で使用する結合型（Review型との競合を避けるため独立して定義）
+type ReviewWithProfile = {
+  id: string;
+  userId: string;
+  tmdbId: number;
+  rating: number;
+  content: string;
+  isSpoiler: boolean;
+  createdAt: string;
+  profiles: {
+    username: string | null;
+  } | null;
 };
 
 export default async function MovieDetailPage({
@@ -49,25 +67,10 @@ export default async function MovieDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // --- 観たい状態 ---
-  let initialIsWished = false;
-
-  if (user) {
-    const { data: wishlistData } = await supabase
-      .from("wishlists")
-      .select("user_id, tmdb_id")
-      .eq("user_id", user.id)
-      .eq("tmdb_id", tmdbId)
-      .maybeSingle();
-
-    initialIsWished = !!wishlistData;
-  }
-
   // --- レビュー一覧（profiles.username を一緒に取得） ---
   const { data: reviewsData, error: reviewsError } = await supabase
     .from("reviews")
-    .select(
-      `
+    .select(`
       id,
       user_id,
       tmdb_id,
@@ -78,14 +81,13 @@ export default async function MovieDetailPage({
       profiles (
         username
       )
-    `,
-    )
+    `)
     .eq("tmdb_id", tmdbId)
     .order("created_at", { ascending: false });
 
   const reviews: ReviewWithProfile[] =
     !reviewsError && reviewsData
-      ? reviewsData.map((r) => ({
+      ? (reviewsData as unknown as DbReviewResponse[]).map((r) => ({
           id: r.id,
           userId: r.user_id,
           tmdbId: r.tmdb_id,
@@ -93,7 +95,7 @@ export default async function MovieDetailPage({
           content: r.content,
           isSpoiler: r.is_spoiler,
           createdAt: r.created_at,
-          profiles: r.profiles as ReviewWithProfile["profiles"],
+          profiles: Array.isArray(r.profiles) ? r.profiles[0] : r.profiles,
         }))
       : [];
 
@@ -109,12 +111,7 @@ export default async function MovieDetailPage({
 
       <MovieHeader movie={movie}>
         <div style={{ display: "flex", gap: "10px" }}>
-          <WishlistButton
-            tmdbId={tmdbId}
-            initialIsWished={initialIsWished}
-            movieTitle={movie.title} 
-            posterPath={movie.posterPath} 
-          />
+          <WishlistButton tmdbId={tmdbId} />
           <ReviewButton tmdbId={tmdbId} />
           <ShareButton tmdbId={tmdbId} />
         </div>
@@ -138,10 +135,7 @@ export default async function MovieDetailPage({
         ) : (
           <div style={{ display: "grid", gap: "12px" }}>
             {reviews.map((review) => {
-              const profileData = Array.isArray(review.profiles)
-                ? review.profiles[0]
-                : review.profiles;
-
+              const profileData = review.profiles;
               const username = profileData?.username ?? "Unknown";
               const isMyReview = user ? review.userId === user.id : false;
 
