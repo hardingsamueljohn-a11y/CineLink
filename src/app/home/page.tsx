@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { searchMovies } from "@/lib/tmdb/api";
 import { supabaseServer } from "@/lib/supabase/server";
-import { logout } from "@/actions/auth";
 import MovieCard from "@/components/movie/Card";
 import MovieGrid from "@/components/movie/Grid";
 import { Review } from "@/types/review";
@@ -157,70 +156,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <main style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
-      {/* ヘッダー */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "16px",
-        }}
-      >
-        <h1 style={{ fontSize: "28px", fontWeight: 700 }}>Home</h1>
-
-        {user ? (
-          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-            <span style={{ fontSize: "12px", color: "#666" }}>ログイン中</span>
-            <Link
-              href={`/profile/${user.id}`}
-              style={{ textDecoration: "none" }}
-              passHref
-            >
-              <button
-                style={{
-                  padding: "6px 10px",
-                  borderRadius: "8px",
-                  border: "1px solid #333",
-                  background: "#fff",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                マイプロフィール
-              </button>
-            </Link>
-
-            <form action={logout}>
-              <button
-                style={{
-                  padding: "6px 10px",
-                  borderRadius: "8px",
-                  border: "1px solid #333",
-                  background: "#fff",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                }}
-              >
-                ログアウト
-              </button>
-            </form>
-          </div>
-        ) : (
-          <div style={{ display: "flex", gap: "12px" }}>
-            <Link href="/login">
-              <button>ログイン</button>
-            </Link>
-            <Link href="/signup">
-              <button>サインアップ</button>
-            </Link>
-          </div>
-        )}
+      <div style={{ marginBottom: "24px" }}>
+        <h1 style={{ fontSize: "28px", fontWeight: 700, margin: 0 }}>Home</h1>
       </div>
-
       {/* =========================
           検索セクション
       ========================= */}
