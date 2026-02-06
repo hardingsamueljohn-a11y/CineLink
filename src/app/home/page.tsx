@@ -13,6 +13,31 @@ type HomePageProps = {
   }>;
 };
 
+// ==========================================
+// 型定義
+// ==========================================
+interface ReviewRawResponse {
+  id: string;
+  user_id: string;
+  tmdb_id: number;
+  rating: number;
+  content: string;
+  is_spoiler: boolean;
+  created_at: string;
+  profiles: { username: string | null } | null;
+  movies: { title: string | null } | null;
+}
+
+type ReviewWithDetails = Omit<Review, "profiles"> & {
+  profiles?: { username: string | null } | null;
+  movies?: { title: string | null } | null;
+};
+
+type WishlistWithDetails = Database["public"]["Tables"]["wishlists"]["Row"] & {
+  profiles?: { username: string | null } | null;
+  movies?: { title: string | null } | null;
+};
+
 export default async function HomePage({ searchParams }: HomePageProps) {
   // =========================
   // 検索（TMDB）
@@ -25,7 +50,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // Supabase
   // =========================
   const supabase = await supabaseServer();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -33,9 +57,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // =========================
   // アクティビティ（タイムライン）
   // =========================
-  let timelineReviews: Review[] = [];
-  let timelineWishlists: Database["public"]["Tables"]["wishlists"]["Row"][] =
-    [];
+  let timelineReviews: ReviewWithDetails[] = [];
+  let timelineWishlists: WishlistWithDetails[] = [];
 
   if (user) {
     const { data: followsData, error: followsError } = await supabase
@@ -50,38 +73,54 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         const { data: reviewsData } = await supabase
           .from("reviews")
           .select(
-            "id, user_id, tmdb_id, rating, content, is_spoiler, created_at",
+            `
+            id, user_id, tmdb_id, rating, content, is_spoiler, created_at,
+            profiles ( username ),
+            movies ( title )
+          `,
           )
           .in("user_id", followingIds)
           .order("created_at", { ascending: false })
           .limit(10);
 
-        timelineReviews = (reviewsData ?? []).map((r) => ({
-          id: r.id,
-          userId: r.user_id,
-          tmdbId: r.tmdb_id,
-          rating: r.rating,
-          content: r.content,
-          isSpoiler: r.is_spoiler,
-          createdAt: r.created_at,
-        }));
+        if (reviewsData) {
+          const rawReviews = reviewsData as unknown as ReviewRawResponse[];
+          timelineReviews = rawReviews.map((r) => ({
+            id: r.id,
+            userId: r.user_id,
+            tmdbId: r.tmdb_id,
+            rating: r.rating,
+            content: r.content,
+            isSpoiler: r.is_spoiler,
+            createdAt: r.created_at,
+            profiles: r.profiles,
+            movies: r.movies,
+          }));
+        }
 
         const { data: wishlistsData } = await supabase
           .from("wishlists")
-          .select("*")
+          .select(
+            `
+            *,
+            profiles ( username ),
+            movies ( title )
+          `,
+          )
           .in("user_id", followingIds)
           .order("created_at", { ascending: false })
           .limit(10);
 
-        timelineWishlists = wishlistsData ?? [];
+        if (wishlistsData) {
+          timelineWishlists = wishlistsData as unknown as WishlistWithDetails[];
+        }
       }
     }
   }
 
   // =========================
-  // 自分の観たい一覧（JOINに依存しない安全版）
+  // 自分の観たい一覧
   // =========================
-
   type WishlistRow = Database["public"]["Tables"]["wishlists"]["Row"];
   type MovieRow = Database["public"]["Tables"]["movies"]["Row"];
 
@@ -89,7 +128,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   let myWishlistMovies: MovieRow[] = [];
 
   if (user) {
-    // ① 自分の wishlists を取得
     const { data: wishlistData, error: wishlistError } = await supabase
       .from("wishlists")
       .select("*")
@@ -99,11 +137,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
     if (!wishlistError) {
       myWishlistRows = wishlistData ?? [];
-
-      // ② tmdb_id の一覧を作る
       const tmdbIds = myWishlistRows.map((w) => w.tmdb_id);
 
-      // ③ movies テーブルをまとめて取得
       if (tmdbIds.length > 0) {
         const { data: moviesData, error: moviesError } = await supabase
           .from("movies")
@@ -117,7 +152,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     }
   }
 
-  // tmdb_id → MovieRow の辞書にして表示を簡単にする
   const movieMap = new Map<number, MovieRow>();
   myWishlistMovies.forEach((m) => movieMap.set(m.tmdb_id, m));
 
@@ -137,8 +171,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         {user ? (
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <span style={{ fontSize: "12px", color: "#666" }}>ログイン中</span>
-
-            {/* --- マイプロフィールボタン --- */}
             <Link
               href={`/profile/${user.id}`}
               style={{ textDecoration: "none" }}
@@ -253,10 +285,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </p>
         )}
 
-        {query && movies.length === 0 ? (
-          <p style={{ color: "#666" }}>該当する映画が見つかりませんでした。</p>
-        ) : null}
-
         <MovieGrid>
           {movies.map((movie) => (
             <MovieCard
@@ -288,9 +316,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px" }}
           >
             {timelineReviews.length === 0 && timelineWishlists.length === 0 ? (
-              <p style={{ color: "#666" }}>
-                まだアクティビティがありません（フォローしてみよう！）
-              </p>
+              <p style={{ color: "#666" }}>まだアクティビティがありません。</p>
             ) : null}
 
             {/* レビュー */}
@@ -304,15 +330,49 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   background: "#fff",
                 }}
               >
-                <p style={{ fontWeight: 700, marginBottom: "6px" }}>
-                  レビュー（ユーザー: {review.userId.slice(0, 8)}...）
-                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "6px",
+                  }}
+                >
+                  <div>
+                    <p style={{ fontWeight: 700 }}>
+                      レビュー: {review.profiles?.username || "名無しユーザー"}{" "}
+                      さん
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        color: "#333",
+                        marginTop: "2px",
+                      }}
+                    >
+                      『{review.movies?.title || "タイトル不明"}』
+                    </p>
+                  </div>
 
-                <p style={{ fontSize: "12px", color: "#666" }}>
-                  tmdb_id: {review.tmdbId} / 評価: {review.rating}
-                </p>
+                  <div
+                    style={{
+                      color: "#f59e0b",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    評価: {review.rating} / 5
+                  </div>
+                </div>
 
-                <p style={{ marginTop: "8px", whiteSpace: "pre-wrap" }}>
+                <p
+                  style={{
+                    marginTop: "8px",
+                    whiteSpace: "pre-wrap",
+                    fontSize: "14px",
+                  }}
+                >
                   {review.isSpoiler
                     ? "※ネタバレあり（内容は隠しています）"
                     : review.content}
@@ -344,12 +404,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   background: "#fff",
                 }}
               >
-                <p style={{ fontWeight: 700, marginBottom: "6px" }}>
-                  観たい追加（ユーザー: {wish.user_id.slice(0, 8)}...）
+                <p style={{ fontWeight: 700, marginBottom: "4px" }}>
+                  観たい追加: {wish.profiles?.username || "名無しユーザー"} さん
                 </p>
 
-                <p style={{ fontSize: "12px", color: "#666" }}>
-                  tmdb_id: {wish.tmdb_id} / status: {wish.status}
+                <p style={{ fontSize: "14px", fontWeight: 600, color: "#333" }}>
+                  『{wish.movies?.title || "タイトル不明"}』
                 </p>
 
                 <div style={{ marginTop: "8px" }}>
