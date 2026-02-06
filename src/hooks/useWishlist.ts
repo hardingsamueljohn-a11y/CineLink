@@ -10,6 +10,7 @@ import { addToWishlist, removeFromWishlist } from '@/actions/wishlists';
 export const useWishlist = (userId: string | null, tmdbId: number) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null); // エラー表示用に追加
 
   // お気に入り状態を取得する関数
   const fetchWishlistStatus = useCallback(async () => {
@@ -48,8 +49,10 @@ export const useWishlist = (userId: string | null, tmdbId: number) => {
 
   // 追加・削除を切り替える関数
   const toggleWishlist = async () => {
+    setError(null); // 操作開始時にエラーをリセット
+
     if (!userId) {
-      alert("ログインが必要です");
+      setError("ログインが必要です"); 
       return;
     }
 
@@ -65,13 +68,13 @@ export const useWishlist = (userId: string | null, tmdbId: number) => {
         // 未登録の場合は追加
         await addToWishlist(tmdbId);
       }
-    } catch (error) {
+    } catch (err) {
       // 失敗した場合は元の状態に戻す
       setIsWishlisted(previousState);
-      console.error('Wishlist toggle failed:', error);
-      alert("お気に入りの更新に失敗しました");
+      console.error('Wishlist toggle failed:', err);
+      setError("お気に入りの更新に失敗しました"); 
     }
   };
 
-  return { isWishlisted, loading, toggleWishlist };
+  return { isWishlisted, loading, error, toggleWishlist };
 };

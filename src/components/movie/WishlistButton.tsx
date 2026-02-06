@@ -1,70 +1,39 @@
 "use client";
 
-import { useState } from "react";
-import { addToWishlist, removeFromWishlist } from "@/actions/wishlists";
+import { useUser } from "@/hooks/useUser";
+import { useWishlist } from "@/hooks/useWishlist";
 
 type WishlistButtonProps = {
   tmdbId: number;
-  initialIsWished: boolean;
-  movieTitle: string;   
-  posterPath: string | null;
 };
 
-export default function WishlistButton({
-  tmdbId,
-  initialIsWished,
-}: WishlistButtonProps) {
-  const [isWished, setIsWished] = useState(initialIsWished);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const handleClick = async () => {
-    setIsLoading(true);
-    setErrorMessage("");
-
-    try {
-      if (isWished) {
-        await removeFromWishlist(tmdbId);
-        setIsWished(false);
-      } else {
-        await addToWishlist(tmdbId);
-        setIsWished(true);
-      }
-    } catch (e) {
-      setErrorMessage(
-        e instanceof Error ? e.message : "エラーが発生しました"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
+export default function WishlistButton({ tmdbId }: WishlistButtonProps) {
+  const { userId } = useUser();
+  const { isWishlisted, loading, error, toggleWishlist } = useWishlist(userId, tmdbId);
 
   return (
     <div>
       <button
-        onClick={handleClick}
-        disabled={isLoading}
+        onClick={toggleWishlist}
+        disabled={loading}
         style={{
           padding: "10px 14px",
           borderRadius: "10px",
           border: "1px solid #333",
-          background: "#fff",
-          cursor: isLoading ? "not-allowed" : "pointer",
-          opacity: isLoading ? 0.6 : 1,
+          background: isWishlisted ? "#333" : "#fff",
+          color: isWishlisted ? "#fff" : "#333",
+          cursor: loading ? "not-allowed" : "pointer",
+          opacity: loading ? 0.6 : 1,
         }}
       >
-        {isLoading
-          ? "処理中..."
-          : isWished
-          ? "観たい解除"
-          : "観たい（追加）"}
+        {loading ? "処理中..." : isWishlisted ? "観たい解除" : "観たい（追加）"}
       </button>
 
-      {errorMessage ? (
+      {error && (
         <p style={{ marginTop: "8px", color: "crimson", fontSize: "12px" }}>
-          {errorMessage}
+          {error}
         </p>
-      ) : null}
+      )}
     </div>
   );
 }
