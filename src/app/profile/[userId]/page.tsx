@@ -45,9 +45,22 @@ export default async function ProfilePage({
 
   if (profileError || !profile) {
     return (
-      <main style={{ padding: "24px" }}>
-        <HomeBackButton />
-        <p>ユーザーが見つかりません。</p>
+      <main
+        style={{
+          padding: "24px",
+          maxWidth: "1000px", 
+          margin: "0 auto", 
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px", 
+        }}
+      >
+        <div>
+          <HomeBackButton />
+        </div>
+        <p style={{ fontSize: "18px", color: "#666" }}>
+          ユーザーが見つかりませんでした。
+        </p>
       </main>
     );
   }
