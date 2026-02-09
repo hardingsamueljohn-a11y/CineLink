@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 
-export default function BackButton() {
+export default function HomeBackButton() {
   const router = useRouter();
 
   return (
     <button
-      onClick={() => router.back()}
+      onClick={() => router.push("/home")}
       style={{
         textDecoration: "underline",
         display: "inline-block",
@@ -19,7 +19,7 @@ export default function BackButton() {
         color: "inherit",
       }}
     >
-      ← 戻る
+      ← ホームへ戻る
     </button>
   );
 }
