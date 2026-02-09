@@ -22,11 +22,14 @@ interface DbReviewResponse {
   content: string;
   is_spoiler: boolean;
   created_at: string;
-  profiles: {
-    username: string | null;
-  } | {
-    username: string | null;
-  }[] | null;
+  profiles:
+    | {
+        username: string | null;
+      }
+    | {
+        username: string | null;
+      }[]
+    | null;
 }
 
 // 内部用：画面で使用する結合型（Review型との競合を避けるため独立して定義）
@@ -70,7 +73,8 @@ export default async function MovieDetailPage({
   // --- レビュー一覧（profiles.username を一緒に取得） ---
   const { data: reviewsData, error: reviewsError } = await supabase
     .from("reviews")
-    .select(`
+    .select(
+      `
       id,
       user_id,
       tmdb_id,
@@ -81,7 +85,8 @@ export default async function MovieDetailPage({
       profiles (
         username
       )
-    `)
+    `,
+    )
     .eq("tmdb_id", tmdbId)
     .order("created_at", { ascending: false });
 
@@ -180,7 +185,15 @@ export default async function MovieDetailPage({
                     {new Date(review.createdAt).toLocaleString("ja-JP")}
                   </p>
 
-                  <p style={{ marginTop: "10px", whiteSpace: "pre-wrap" }}>
+                  <p
+                    style={{
+                      marginTop: "10px",
+                      whiteSpace: "pre-wrap",
+                      // --- レイアウト崩れ防止 ---
+                      wordBreak: "break-word",
+                      overflowWrap: "anywhere",
+                    }}
+                  >
                     {review.isSpoiler
                       ? "※ネタバレあり（内容は非表示）"
                       : review.content}

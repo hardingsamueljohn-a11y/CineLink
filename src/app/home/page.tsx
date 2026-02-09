@@ -309,6 +309,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     marginTop: "8px",
                     whiteSpace: "pre-wrap",
                     fontSize: "14px",
+                    // --- レイアウト崩れ防止 ---
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
                   }}
                 >
                   {review.isSpoiler

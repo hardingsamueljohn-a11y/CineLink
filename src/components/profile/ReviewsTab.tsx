@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Review } from "@/types/review";
 
 type ReviewsTabProps = {
-  reviews: Review[]; 
+  reviews: Review[];
 };
 
 export default function ReviewsTab({ reviews }: ReviewsTabProps) {
@@ -46,7 +46,9 @@ export default function ReviewsTab({ reviews }: ReviewsTabProps) {
             >
               {review.movieTitle}
             </Link>
-            <div style={{ color: "#f59e0b", fontSize: "14px", fontWeight: "bold" }}>
+            <div
+              style={{ color: "#f59e0b", fontSize: "14px", fontWeight: "bold" }}
+            >
               評価: {review.rating} / 5
             </div>
           </div>
@@ -72,13 +74,26 @@ export default function ReviewsTab({ reviews }: ReviewsTabProps) {
                     background: "#f9f9f9",
                     borderRadius: "8px",
                     whiteSpace: "pre-wrap",
+                    // --- レイアウト崩れ防止 ---
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
                   }}
                 >
                   {review.content}
                 </div>
               </details>
             ) : (
-              <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>{review.content}</p>
+              <p
+                style={{
+                  whiteSpace: "pre-wrap",
+                  margin: 0,
+                  // --- レイアウト崩れ防止 ---
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {review.content}
+              </p>
             )}
           </div>
 
