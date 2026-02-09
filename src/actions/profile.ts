@@ -1,6 +1,7 @@
 "use server";
 
 import { supabaseServer } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 /**
  * ユーザー名でプロフィールを検索する（ilikeによる部分一致）
@@ -24,4 +25,35 @@ export async function searchUsers(query: string) {
   }
 
   return data ?? [];
+}
+
+/**
+ * プロフィール情報を更新する
+ */
+export async function updateProfile({
+  userId,
+  username,
+  bio,
+}: {
+  userId: string;
+  username: string;
+  bio: string;
+}) {
+  const supabase = await supabaseServer();
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      username,
+      bio,
+    })
+    .eq("id", userId);
+
+  if (error) {
+    console.error("Profile update error:", error.message);
+    throw new Error(error.message);
+  }
+
+  // 変更を反映させるためにキャッシュを更新
+  revalidatePath(`/profile/${userId}`);
 }
