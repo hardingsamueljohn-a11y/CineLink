@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react"; 
 import FollowButton from "@/components/profile/FollowButton"; 
+import EditProfileModal from "@/components/profile/EditProfileModal"; 
 import { Profile } from "@/types/profile";
 
 type ProfileHeaderProps = {
@@ -26,6 +28,8 @@ export default function ProfileHeader({
   currentUserId, // 自分のID
   initialIsFollowing,
 }: ProfileHeaderProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false); // モーダル状態管理
+
   return (
     <section
       style={{
@@ -73,11 +77,30 @@ export default function ProfileHeader({
 
         {/* User Info */}
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: "20px", fontWeight: 800 }}>
-            {username || "Unknown User"}
-          </h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <h1 style={{ fontSize: "20px", fontWeight: 800 }}>
+              {username || "Unknown User"}
+            </h1>
+            
+            {/* 自分のプロフィールの時だけ編集ボタンを表示 */}
+            {isMyProfile && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                style={{
+                  padding: "4px 12px",
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  borderRadius: "16px",
+                  border: "1px solid #ccc",
+                  background: "#fff",
+                }}
+              >
+                編集
+              </button>
+            )}
+          </div>
 
-          <p style={{ marginTop: "6px", fontSize: "14px", color: "#666" }}>
+          <p style={{ marginTop: "6px", fontSize: "14px", color: "#666", whiteSpace: "pre-wrap" }}>
             {bio || "自己紹介はまだありません。"}
           </p>
 
@@ -104,6 +127,14 @@ export default function ProfileHeader({
           />
         )}
       </div>
+
+      {/* 編集モーダル */}
+      {isModalOpen && (
+        <EditProfileModal
+          profile={{ id: userId, username, bio }}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </section>
   );
 }
