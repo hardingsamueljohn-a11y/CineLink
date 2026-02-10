@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { searchMovies } from "@/lib/tmdb/api";
 import { supabaseServer } from "@/lib/supabase/server";
 import MovieCard from "@/components/movie/Card";
 import MovieGrid from "@/components/movie/Grid";
+import MovieSearchOverlay from "@/components/movie/MovieSearchOverlay";
 import { Review } from "@/types/review";
 import { Database } from "@/types/supabase";
 
@@ -38,12 +38,13 @@ type WishlistWithDetails = Database["public"]["Tables"]["wishlists"]["Row"] & {
 };
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  // =========================
-  // 検索（TMDB）
-  // =========================
-  const params = await searchParams;
-  const query = params?.q ?? "";
-  const movies = query ? await searchMovies(query) : [];
+  // ============================================================
+  // 映画検索セクション (TMDB API)
+  // ------------------------------------------------------------
+  // 入力に合わせて結果を動的に表示するオーバーレイ検索を採用。
+  // APIキー保護のため Server Actions を介した設計にしています。
+  // ===========================================================
+  await searchParams;
 
   // =========================
   // Supabase
@@ -159,83 +160,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: 700, margin: 0 }}>Home</h1>
       </div>
-      {/* =========================
-          検索セクション
-      ========================= */}
-      <section style={{ marginBottom: "24px" }}>
-        <form action="/home" method="GET">
-          <input
-            name="q"
-            defaultValue={query}
-            placeholder="映画を検索（例：スター・ウォーズ）"
-            style={{
-              width: "100%",
-              padding: "16px",
-              fontSize: "18px",
-              borderRadius: "10px",
-              border: "1px solid #ccc",
-              outline: "none",
-            }}
-          />
 
-          <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
-            <button
-              type="submit"
-              style={{
-                padding: "10px 14px",
-                borderRadius: "8px",
-                border: "1px solid #333",
-                background: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              検索
-            </button>
-
-            {query ? (
-              <Link
-                href="/home"
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: "8px",
-                  border: "1px solid #ccc",
-                  textDecoration: "none",
-                  color: "#333",
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
-                クリア
-              </Link>
-            ) : null}
-          </div>
-        </form>
-      </section>
-
-      <section style={{ marginBottom: "40px" }}>
-        {query ? (
-          <p style={{ marginBottom: "12px" }}>
-            「<strong>{query}</strong>」の検索結果：{movies.length} 件
-          </p>
-        ) : (
-          <p style={{ marginBottom: "12px", color: "#666" }}>
-            上の検索窓で映画を検索できます。
-          </p>
-        )}
-
-        <MovieGrid>
-          {movies.map((movie) => (
-            <MovieCard
-              key={movie.id}
-              id={movie.id}
-              title={movie.title}
-              posterPath={movie.posterPath}
-              releaseDate={movie.releaseDate}
-              voteAverage={movie.voteAverage}
-            />
-          ))}
-        </MovieGrid>
-      </section>
+      {/* 検索セクション：インタラクティブなオーバーレイ検索コンポーネント */}
+      <MovieSearchOverlay />
 
       {/* =========================
           アクティビティ（タイムライン）
@@ -309,7 +236,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     marginTop: "8px",
                     whiteSpace: "pre-wrap",
                     fontSize: "14px",
-                    // --- レイアウト崩れ防止 ---
                     wordBreak: "break-word",
                     overflowWrap: "anywhere",
                   }}
