@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
-import { logout } from "@/actions/auth";
+import UserMenu from "./UserMenu"; 
 
 export default async function Header() {
   const supabase = await supabaseServer();
@@ -12,7 +12,7 @@ export default async function Header() {
   if (user) {
     const { data } = await supabase
       .from("profiles")
-      .select("username")
+      .select("username, avatar_url") 
       .eq("id", user.id)
       .single();
     profile = data;
@@ -74,21 +74,11 @@ export default async function Header() {
         <nav>
           {user ? (
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              <Link
-                href={`/profile/${user.id}`}
-                style={{ textDecoration: "none" }}
-              >
-                <button style={buttonStyle}>
-                  <span style={{ fontSize: "16px" }}>👤</span>
-                  <span>{profile?.username || "Guest"}</span>
-                </button>
-              </Link>
-
-              <form action={logout}>
-                <button type="submit" style={buttonStyle}>
-                  ログアウト
-                </button>
-              </form>
+              <UserMenu 
+                userId={user.id} 
+                username={profile?.username || "Guest"} 
+                avatarUrl={profile?.avatar_url}
+              />
             </div>
           ) : (
             <div style={{ display: "flex", gap: "8px" }}>
