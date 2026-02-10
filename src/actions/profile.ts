@@ -2,6 +2,7 @@
 
 import { supabaseServer } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { Profile } from "@/types/profile";
 
 /**
  * ユーザー名でプロフィールを検索する（ilikeによる部分一致）
@@ -34,19 +35,29 @@ export async function updateProfile({
   userId,
   username,
   bio,
+  avatarUrl, 
 }: {
   userId: string;
   username: string;
   bio: string;
+  avatarUrl?: string | null; 
 }) {
   const supabase = await supabaseServer();
 
+  // 更新する値をオブジェクトとして定義（Partial<Profile>を使うことで安全に）
+  const updateData: Partial<Profile> = {
+    username,
+    bio,
+  };
+
+  // avatarUrlが渡された場合のみ更新対象に含める
+  if (avatarUrl !== undefined) {
+    updateData.avatar_url = avatarUrl;
+  }
+
   const { error } = await supabase
     .from("profiles")
-    .update({
-      username,
-      bio,
-    })
+    .update(updateData)
     .eq("id", userId);
 
   if (error) {
