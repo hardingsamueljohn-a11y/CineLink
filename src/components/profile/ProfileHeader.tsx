@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react"; 
-import FollowButton from "@/components/profile/FollowButton"; 
-import EditProfileModal from "@/components/profile/EditProfileModal"; 
+import { useState } from "react";
+import FollowButton from "@/components/profile/FollowButton";
+import EditProfileModal from "@/components/profile/EditProfileModal";
 import { Profile } from "@/types/profile";
 
 type ProfileHeaderProps = {
   userId: string;
-  username: Profile["username"]; 
+  username: Profile["username"];
   avatarUrl: Profile["avatar_url"];
   bio: Profile["bio"];
   followingCount: number;
@@ -81,7 +81,7 @@ export default function ProfileHeader({
             <h1 style={{ fontSize: "20px", fontWeight: 800 }}>
               {username || "Unknown User"}
             </h1>
-            
+
             {/* 自分のプロフィールの時だけ編集ボタンを表示 */}
             {isMyProfile && (
               <button
@@ -100,7 +100,14 @@ export default function ProfileHeader({
             )}
           </div>
 
-          <p style={{ marginTop: "6px", fontSize: "14px", color: "#666", whiteSpace: "pre-wrap" }}>
+          <p
+            style={{
+              marginTop: "6px",
+              fontSize: "14px",
+              color: "#666",
+              whiteSpace: "pre-wrap",
+            }}
+          >
             {bio || "自己紹介はまだありません。"}
           </p>
 
@@ -131,7 +138,12 @@ export default function ProfileHeader({
       {/* 編集モーダル */}
       {isModalOpen && (
         <EditProfileModal
-          profile={{ id: userId, username, bio }}
+          profile={{
+            id: userId,
+            username,
+            bio,
+            avatar_url: avatarUrl, 
+          }}
           onClose={() => setIsModalOpen(false)}
         />
       )}

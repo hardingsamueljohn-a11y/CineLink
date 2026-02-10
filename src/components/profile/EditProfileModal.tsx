@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react"; 
 import { updateProfile } from "@/actions/profile";
+import { supabase } from "@/lib/supabase/client"; 
 
 type EditProfileModalProps = {
   profile: {
     id: string;
     username: string | null;
     bio: string | null;
+    avatar_url: string | null;
   };
   onClose: () => void;
 };
@@ -16,10 +18,29 @@ type EditProfileModalProps = {
  * プロフィール編集用モーダルコンポーネント
  */
 export default function EditProfileModal({ profile, onClose }: EditProfileModalProps) {
+  // ファイル入力の参照
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // 入力フォームの状態管理
   const [username, setUsername] = useState(profile.username || "");
   const [bio, setBio] = useState(profile.bio || "");
   const [loading, setLoading] = useState(false);
+
+  // 画像プレビュー・アップロード用の状態管理
+  const [previewUrl, setPreviewUrl] = useState<string | null>(profile.avatar_url);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  /**
+   * 画像が選択された時の処理
+   */
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      // 表示用のプレビューURLを作成
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
   /**
    * フォーム送信処理
@@ -29,12 +50,37 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
     setLoading(true);
 
     try {
+      let finalAvatarUrl = profile.avatar_url;
+
+      // 新しい画像が選択されている場合はStorageへアップロード
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split(".").pop();
+        // ファイル名を重複させないためのランダムな名前
+        const fileName = `${profile.id}-${Math.random()}.${fileExt}`;
+        const filePath = `${profile.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(filePath, selectedFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        // 公開URLを取得
+        const { data: { publicUrl } } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(filePath);
+        
+        finalAvatarUrl = publicUrl;
+      }
+
       // サーバーアクションを呼び出してDBを更新
       await updateProfile({
         userId: profile.id,
         username,
         bio,
+        avatarUrl: finalAvatarUrl,
       });
+
       // 成功したらモーダルを閉じる
       onClose();
     } catch (error) {
@@ -70,6 +116,54 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
         <h2 style={{ marginBottom: "20px", fontSize: "18px", fontWeight: "bold" }}>プロフィールを編集</h2>
         
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          
+          {/* プロフィール画像編集部分 */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+            <div style={{
+              width: "80px",
+              height: "80px",
+              borderRadius: "50%",
+              overflow: "hidden",
+              background: "#eee",
+              flexShrink: 0
+            }}>
+              {previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img 
+                  src={previewUrl} 
+                  alt="preview" 
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                />
+              ) : (
+                <div style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#999",
+                  fontSize: "12px"
+                }}>
+                  NO IMAGE
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              style={{ fontSize: "12px", color: "#0070f3", cursor: "pointer", background: "none", border: "none" }}
+            >
+              画像を変更
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              style={{ display: "none" }}
+            />
+          </div>
+
           {/* ユーザー名入力フィールド */}
           <div>
             <label style={{ display: "block", fontSize: "13px", fontWeight: "bold", marginBottom: "6px" }}>
