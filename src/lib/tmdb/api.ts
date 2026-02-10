@@ -87,3 +87,30 @@ export const getMovieDetail = async (tmdbId: number): Promise<Movie> => {
   const data = (await res.json()) as TmdbMovieResponse;
   return mapToMovie(data);
 };
+
+/**
+ * 現在公開中の映画取得
+ */
+export const getNowPlayingMovies = async (): Promise<Movie[]> => {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) {
+    throw new Error("TMDB_API_KEY is missing.");
+  }
+
+  const url = new URL(`${TMDB_BASE_URL}/movie/now_playing`);
+  url.searchParams.set("api_key", apiKey);
+  url.searchParams.set("language", "ja-JP");
+  url.searchParams.set("region", "JP"); // 日本の公開情報を優先
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    next: { revalidate: 3600 }, // 1時間キャッシュ
+  });
+
+  if (!res.ok) {
+    throw new Error(`TMDB now playing failed: ${res.status}`);
+  }
+
+  const data = (await res.json()) as SearchMoviesResponse;
+  return (data.results ?? []).map(mapToMovie);
+};

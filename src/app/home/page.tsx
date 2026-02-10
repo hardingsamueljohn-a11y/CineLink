@@ -5,6 +5,7 @@ import MovieGrid from "@/components/movie/Grid";
 import MovieSearchOverlay from "@/components/movie/MovieSearchOverlay";
 import { Review } from "@/types/review";
 import { Database } from "@/types/supabase";
+import { getNowPlayingMovies } from "@/lib/tmdb/api";
 
 type HomePageProps = {
   searchParams: Promise<{
@@ -45,6 +46,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // APIキー保護のため Server Actions を介した設計にしています。
   // ===========================================================
   await searchParams;
+
+  // =========================
+  // 公開中の映画取得
+  // =========================
+  const nowPlayingMovies = await getNowPlayingMovies();
 
   // =========================
   // Supabase
@@ -163,6 +169,40 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {/* 検索セクション：インタラクティブなオーバーレイ検索コンポーネント */}
       <MovieSearchOverlay />
+
+      {/* =========================
+          公開中の映画セクション（横スクロール形式）
+      ========================= */}
+      <section style={{ marginBottom: "40px", marginTop: "24px" }}>
+        <h2 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "12px" }}>
+          公開中の映画
+        </h2>
+        <div
+          style={{
+            display: "flex",
+            overflowX: "auto",
+            gap: "16px",
+            paddingBottom: "12px", 
+            scrollbarWidth: "thin", 
+            msOverflowStyle: "none", 
+          }}
+        >
+          {nowPlayingMovies.slice(0, 15).map((movie) => (
+            <div
+              key={movie.id}
+              style={{
+                flex: "0 0 160px", 
+              }}
+            >
+              <MovieCard
+                id={movie.id}
+                title={movie.title}
+                posterPath={movie.posterPath}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* =========================
           アクティビティ（タイムライン）
