@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link"; 
 import FollowButton from "@/components/profile/FollowButton";
 import EditProfileModal from "@/components/profile/EditProfileModal";
 import { Profile } from "@/types/profile";
@@ -120,8 +121,25 @@ export default function ProfileHeader({
               color: "#333",
             }}
           >
-            <span>フォロー {followingCount}</span>
-            <span>フォロワー {followerCount}</span>
+            {/* フォロー数へのリンク */}
+            <Link 
+              href={`/profile/${userId}/following`}
+              style={{ textDecoration: "none", color: "inherit" }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.7")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+            >
+              <span style={{ fontWeight: "bold" }}>{followingCount}</span> フォロー
+            </Link>
+
+            {/* フォロワー数へのリンク */}
+            <Link 
+              href={`/profile/${userId}/followers`}
+              style={{ textDecoration: "none", color: "inherit" }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.7")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+            >
+              <span style={{ fontWeight: "bold" }}>{followerCount}</span> フォロワー
+            </Link>
           </div>
         </div>
 
