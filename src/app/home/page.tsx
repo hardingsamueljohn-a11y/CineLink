@@ -3,9 +3,10 @@ import { supabaseServer } from "@/lib/supabase/server";
 import MovieCard from "@/components/movie/Card";
 import MovieGrid from "@/components/movie/Grid";
 import MovieSearchOverlay from "@/components/movie/MovieSearchOverlay";
+import MovieHero from "@/components/movie/Hero";
 import { Review } from "@/types/review";
 import { Database } from "@/types/supabase";
-import { getNowPlayingMovies } from "@/lib/tmdb/api";
+import { getNowPlayingMovies, getHeroMovies } from "@/lib/tmdb/api";
 
 type HomePageProps = {
   searchParams: Promise<{
@@ -51,6 +52,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // 公開中の映画取得
   // =========================
   const nowPlayingMovies = await getNowPlayingMovies();
+
+  // =========================
+  // 高評価映画の取得 (Hero用)
+  // =========================
+  const trendingMovies = await getHeroMovies();
 
   // =========================
   // Supabase
@@ -171,6 +177,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <MovieSearchOverlay />
 
       {/* =========================
+          Heroセクション（クライアントサイドでランダム選出）
+      ========================= */}
+      <MovieHero movies={trendingMovies} />
+
+      {/* =========================
           公開中の映画セクション（横スクロール形式）
       ========================= */}
       <section style={{ marginBottom: "40px", marginTop: "24px" }}>
@@ -182,16 +193,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             display: "flex",
             overflowX: "auto",
             gap: "16px",
-            paddingBottom: "12px", 
-            scrollbarWidth: "thin", 
-            msOverflowStyle: "none", 
+            paddingBottom: "12px",
+            scrollbarWidth: "thin",
+            msOverflowStyle: "none",
           }}
         >
           {nowPlayingMovies.slice(0, 15).map((movie) => (
             <div
               key={movie.id}
               style={{
-                flex: "0 0 160px", 
+                flex: "0 0 160px",
               }}
             >
               <MovieCard
