@@ -23,6 +23,54 @@ type MovieListResponse = {
   total_results: number;
 };
 
+/**
+ * クレジット（出演者・スタッフ）の型定義
+ */
+export type Cast = {
+  id: number;
+  name: string;
+  character: string;
+  profilePath: string | null;
+};
+
+export type Crew = {
+  id: number;
+  name: string;
+  job: string;
+};
+
+type TmdbCreditsResponse = {
+  cast: {
+    id: number;
+    name: string;
+    character: string;
+    profile_path: string | null;
+  }[];
+  crew: {
+    id: number;
+    name: string;
+    job: string;
+  }[];
+};
+
+/**
+ * 動画（予告編）の型定義
+ */
+export type Video = {
+  key: string;
+  site: string;
+  type: string;
+};
+
+type TmdbVideosResponse = {
+  results: {
+    key: string;
+    site: string;
+    type: string;
+    iso_639_1: string;
+  }[];
+};
+
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
 /**
@@ -178,4 +226,67 @@ export const getHeroMovies = async (): Promise<Movie[]> => {
     .map(mapToMovie)
     // あらすじがちゃんとあり、かつ長すぎない・短すぎないものに絞る
     .filter((movie) => movie.overview && movie.overview.trim().length > 20);
+};
+
+/**
+ * 映画の出演者と監督を取得する
+ * @param tmdbId TMDB ID
+ */
+export const getMovieCredits = async (
+  tmdbId: number
+): Promise<{ cast: Cast[]; director: Crew | null }> => {
+  const url = new URL(`${TMDB_BASE_URL}/movie/${tmdbId}/credits`);
+  url.searchParams.set("api_key", getApiKey());
+  url.searchParams.set("language", "ja-JP");
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    next: { revalidate: 3600 },
+  });
+
+  if (!res.ok) return { cast: [], director: null };
+
+  const data = (await res.json()) as TmdbCreditsResponse;
+
+  const cast = data.cast.slice(0, 10).map((c) => ({
+    id: c.id,
+    name: c.name,
+    character: c.character,
+    profilePath: c.profile_path,
+  }));
+
+  const directorData = data.crew.find((c) => c.job === "Director");
+  const director = directorData
+    ? { id: directorData.id, name: directorData.name, job: directorData.job }
+    : null;
+
+  return { cast, director };
+};
+
+/**
+ * 映画の動画（予告編）を取得する
+ * @param tmdbId TMDB ID
+ */
+export const getMovieVideos = async (tmdbId: number): Promise<Video[]> => {
+  const url = new URL(`${TMDB_BASE_URL}/movie/${tmdbId}/videos`);
+  url.searchParams.set("api_key", getApiKey());
+  // 動画は日本語で見つからないことが多いため、まずは言語設定なしで取得を試みる
+  
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    next: { revalidate: 3600 },
+  });
+
+  if (!res.ok) return [];
+
+  const data = (await res.json()) as TmdbVideosResponse;
+  
+  // YouTubeのTrailer（予告編）を優先的に返す
+  return data.results
+    .filter((v) => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"))
+    .map((v) => ({
+      key: v.key,
+      site: v.site,
+      type: v.type,
+    }));
 };
