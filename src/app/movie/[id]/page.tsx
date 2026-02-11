@@ -1,12 +1,18 @@
-import Link from "next/link";
 import Image from "next/image";
-import { getMovieDetail, getMovieCredits, getMovieVideos } from "@/lib/tmdb/api"; // getMovieVideosを追加
+import {
+  getMovieDetail,
+  getMovieCredits,
+  getMovieVideos,
+} from "@/lib/tmdb/api";
 import WishlistButton from "@/components/movie/WishlistButton";
 import ReviewButton from "@/components/movie/ReviewButton";
 import ShareButton from "@/components/movie/ShareButton";
 import { supabaseServer } from "@/lib/supabase/server";
 import MovieHeader from "@/components/movie/Header";
 import HomeBackButton from "@/components/movie/HomeBackButton";
+import { Review } from "@/types/review";
+import { Profile } from "@/types/profile";
+import ReviewList from "@/components/review/ReviewList";
 
 type MovieDetailPageProps = {
   params: Promise<{
@@ -23,29 +29,8 @@ interface DbReviewResponse {
   content: string;
   is_spoiler: boolean;
   created_at: string;
-  profiles:
-    | {
-        username: string | null;
-      }
-    | {
-        username: string | null;
-      }[]
-    | null;
+  profiles: Profile | Profile[] | null;
 }
-
-// 内部用：画面で使用する結合型（Review型との競合を避けるため独立して定義）
-type ReviewWithProfile = {
-  id: string;
-  userId: string;
-  tmdbId: number;
-  rating: number;
-  content: string;
-  isSpoiler: boolean;
-  createdAt: string;
-  profiles: {
-    username: string | null;
-  } | null;
-};
 
 export default async function MovieDetailPage({
   params,
@@ -79,7 +64,7 @@ export default async function MovieDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // --- レビュー一覧（profiles.username を一緒に取得） ---
+  // --- レビュー一覧 ---
   const { data: reviewsData, error: reviewsError } = await supabase
     .from("reviews")
     .select(
@@ -92,25 +77,37 @@ export default async function MovieDetailPage({
       is_spoiler,
       created_at,
       profiles (
-        username
+        id,
+        username,
+        avatar_url,
+        bio
       )
     `,
     )
     .eq("tmdb_id", tmdbId)
     .order("created_at", { ascending: false });
 
-  const reviews: ReviewWithProfile[] =
-    !reviewsError && reviewsData
-      ? (reviewsData as unknown as DbReviewResponse[]).map((r) => ({
-          id: r.id,
-          userId: r.user_id,
-          tmdbId: r.tmdb_id,
-          rating: r.rating,
-          content: r.content,
-          isSpoiler: r.is_spoiler,
-          createdAt: r.created_at,
-          profiles: Array.isArray(r.profiles) ? r.profiles[0] : r.profiles,
-        }))
+  const rawReviews = (reviewsData as unknown as DbReviewResponse[]) || [];
+
+  const reviews: Review[] =
+    !reviewsError && rawReviews.length > 0
+      ? rawReviews.map((r) => {
+          const profileData = Array.isArray(r.profiles)
+            ? r.profiles[0]
+            : r.profiles;
+
+          return {
+            id: r.id,
+            userId: r.user_id,
+            tmdbId: r.tmdb_id,
+            rating: r.rating,
+            content: r.content,
+            isSpoiler: r.is_spoiler,
+            createdAt: r.created_at,
+            profiles: profileData ?? undefined,
+            movieTitle: movie.title,
+          };
+        })
       : [];
 
   return (
@@ -127,7 +124,10 @@ export default async function MovieDetailPage({
         {/* 監督情報の表示 */}
         {credits.director && (
           <p style={{ fontSize: "14px", color: "#666", marginBottom: "12px" }}>
-            監督: <span style={{ color: "#000", fontWeight: 600 }}>{credits.director.name}</span>
+            監督:{" "}
+            <span style={{ color: "#000", fontWeight: 600 }}>
+              {credits.director.name}
+            </span>
           </p>
         )}
 
@@ -147,12 +147,14 @@ export default async function MovieDetailPage({
           予告編（動画）セクション
       ========================= */}
       <section style={{ marginTop: "32px" }}>
-        <div style={{ 
-          display: "flex", 
-          justifyContent: "space-between", 
-          alignItems: "center",
-          marginBottom: "16px" 
-        }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "16px",
+          }}
+        >
           <h2 style={{ fontSize: "20px", fontWeight: 800, margin: 0 }}>
             予告編
           </h2>
@@ -176,7 +178,7 @@ export default async function MovieDetailPage({
             style={{
               position: "relative",
               width: "100%",
-              paddingTop: "56.25%", 
+              paddingTop: "56.25%",
               backgroundColor: "#000",
               borderRadius: "12px",
               overflow: "hidden",
@@ -198,13 +200,15 @@ export default async function MovieDetailPage({
             ></iframe>
           </div>
         ) : (
-          <div style={{ 
-            padding: "40px", 
-            textAlign: "center", 
-            background: "#f5f5f5", 
-            borderRadius: "12px", 
-            color: "#999" 
-          }}>
+          <div
+            style={{
+              padding: "40px",
+              textAlign: "center",
+              background: "#f5f5f5",
+              borderRadius: "12px",
+              color: "#999",
+            }}
+          >
             予告編映像が登録されていません
           </div>
         )}
@@ -217,75 +221,11 @@ export default async function MovieDetailPage({
         <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "12px" }}>
           レビュー一覧
         </h2>
-
-        {reviews.length === 0 ? (
-          <p style={{ color: "#666" }}>まだレビューがありません。</p>
-        ) : (
-          <div style={{ display: "grid", gap: "12px" }}>
-            {reviews.map((review) => {
-              const profileData = review.profiles;
-              const username = profileData?.username ?? "Unknown";
-              const isMyReview = user ? review.userId === user.id : false;
-
-              return (
-                <div
-                  key={review.id}
-                  style={{
-                    border: "1px solid #ddd",
-                    borderRadius: "12px",
-                    padding: "12px",
-                    background: "#fff",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: "12px",
-                      alignItems: "center",
-                    }}
-                  >
-                    <p style={{ fontWeight: 700, marginBottom: "6px" }}>
-                      ユーザー：{username} / 評価：{review.rating}
-                    </p>
-
-                    {isMyReview ? (
-                      <Link
-                        href={`/movie/${tmdbId}/review`}
-                        style={{
-                          fontSize: "12px",
-                          textDecoration: "underline",
-                          color: "#333",
-                        }}
-                      >
-                        編集
-                      </Link>
-                    ) : null}
-                  </div>
-
-                  <p style={{ fontSize: "12px", color: "#666" }}>
-                    投稿日：
-                    {new Date(review.createdAt).toLocaleString("ja-JP")}
-                  </p>
-
-                  <p
-                    style={{
-                      marginTop: "10px",
-                      whiteSpace: "pre-wrap",
-                      // --- レイアウト崩れ防止 ---
-                      wordBreak: "break-word",
-                      overflowWrap: "anywhere",
-                    }}
-                  >
-                    {review.isSpoiler
-                      ? "※ネタバレあり（内容は非表示）"
-                      : review.content}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <ReviewList 
+          reviews={reviews} 
+          tmdbId={tmdbId} 
+          currentUserId={user?.id} 
+        />
       </section>
 
       {/* =========================
@@ -331,7 +271,9 @@ export default async function MovieDetailPage({
                     style={{ objectFit: "cover" }}
                   />
                 ) : (
-                  <div style={{ padding: "20px", fontSize: "10px", color: "#999" }}>
+                  <div
+                    style={{ padding: "20px", fontSize: "10px", color: "#999" }}
+                  >
                     No Image
                   </div>
                 )}
