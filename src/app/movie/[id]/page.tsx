@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getMovieDetail } from "@/lib/tmdb/api";
+import Image from "next/image";
+import { getMovieDetail, getMovieCredits, getMovieVideos } from "@/lib/tmdb/api"; // getMovieVideosを追加
 import WishlistButton from "@/components/movie/WishlistButton";
 import ReviewButton from "@/components/movie/ReviewButton";
 import ShareButton from "@/components/movie/ShareButton";
@@ -61,7 +62,15 @@ export default async function MovieDetailPage({
     );
   }
 
-  const movie = await getMovieDetail(tmdbId);
+  // 並列でデータを取得（動画情報も追加）
+  const [movie, credits, videos] = await Promise.all([
+    getMovieDetail(tmdbId),
+    getMovieCredits(tmdbId),
+    getMovieVideos(tmdbId),
+  ]);
+
+  // 最初の予告編を1つ選出（なければ null）
+  const trailer = videos.find((v) => v.type === "Trailer") || videos[0] || null;
 
   // --- Supabase ---
   const supabase = await supabaseServer();
@@ -115,6 +124,13 @@ export default async function MovieDetailPage({
       ========================= */}
 
       <MovieHeader movie={movie}>
+        {/* 監督情報の表示 */}
+        {credits.director && (
+          <p style={{ fontSize: "14px", color: "#666", marginBottom: "12px" }}>
+            監督: <span style={{ color: "#000", fontWeight: 600 }}>{credits.director.name}</span>
+          </p>
+        )}
+
         <div style={{ display: "flex", gap: "10px" }}>
           <WishlistButton tmdbId={tmdbId} />
           <ReviewButton tmdbId={tmdbId} />
@@ -126,6 +142,122 @@ export default async function MovieDetailPage({
           </p>
         )}
       </MovieHeader>
+
+      {/* =========================
+          予告編（動画）セクション
+      ========================= */}
+      {trailer && (
+        <section style={{ marginTop: "32px" }}>
+          <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "16px" }}>
+            予告編
+          </h2>
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              paddingTop: "56.25%", 
+              backgroundColor: "#000",
+              borderRadius: "12px",
+              overflow: "hidden",
+            }}
+          >
+            <iframe
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+              }}
+              src={`https://www.youtube.com/embed/${trailer.key}`}
+              title="Movie Trailer"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </section>
+      )}
+
+      {/* =========================
+          キャスト一覧（横スクロール）
+      ========================= */}
+      <section style={{ marginTop: "32px" }}>
+        <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "16px" }}>
+          主な出演者
+        </h2>
+        <div
+          style={{
+            display: "flex",
+            overflowX: "auto",
+            gap: "16px",
+            paddingBottom: "16px",
+            scrollbarWidth: "thin",
+          }}
+        >
+          {credits.cast.map((person) => (
+            <div
+              key={person.id}
+              style={{
+                flex: "0 0 100px",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: "100px",
+                  height: "100px",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  backgroundColor: "#eee",
+                  position: "relative",
+                  marginBottom: "8px",
+                }}
+              >
+                {person.profilePath ? (
+                  <Image
+                    src={`https://image.tmdb.org/t/p/w185${person.profilePath}`}
+                    alt={person.name}
+                    fill
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <div style={{ padding: "20px", fontSize: "10px", color: "#999" }}>
+                    No Image
+                  </div>
+                )}
+              </div>
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  margin: 0,
+                  lineHeight: "1.2",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {person.name}
+              </p>
+              <p
+                style={{
+                  fontSize: "11px",
+                  color: "#666",
+                  margin: "4px 0 0 0",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 1,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {person.character}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* =========================
           レビュー一覧
