@@ -146,11 +146,32 @@ export default async function MovieDetailPage({
       {/* =========================
           予告編（動画）セクション
       ========================= */}
-      {trailer && (
-        <section style={{ marginTop: "32px" }}>
-          <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "16px" }}>
+      <section style={{ marginTop: "32px" }}>
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center",
+          marginBottom: "16px" 
+        }}>
+          <h2 style={{ fontSize: "20px", fontWeight: 800, margin: 0 }}>
             予告編
           </h2>
+          {/* YouTubeで探すリンク */}
+          <a
+            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + " 予告編")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: "12px",
+              color: "#666",
+              textDecoration: "underline",
+            }}
+          >
+            YouTubeで探す
+          </a>
+        </div>
+
+        {trailer ? (
           <div
             style={{
               position: "relative",
@@ -176,87 +197,17 @@ export default async function MovieDetailPage({
               allowFullScreen
             ></iframe>
           </div>
-        </section>
-      )}
-
-      {/* =========================
-          キャスト一覧（横スクロール）
-      ========================= */}
-      <section style={{ marginTop: "32px" }}>
-        <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "16px" }}>
-          主な出演者
-        </h2>
-        <div
-          style={{
-            display: "flex",
-            overflowX: "auto",
-            gap: "16px",
-            paddingBottom: "16px",
-            scrollbarWidth: "thin",
-          }}
-        >
-          {credits.cast.map((person) => (
-            <div
-              key={person.id}
-              style={{
-                flex: "0 0 100px",
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{
-                  width: "100px",
-                  height: "100px",
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  backgroundColor: "#eee",
-                  position: "relative",
-                  marginBottom: "8px",
-                }}
-              >
-                {person.profilePath ? (
-                  <Image
-                    src={`https://image.tmdb.org/t/p/w185${person.profilePath}`}
-                    alt={person.name}
-                    fill
-                    style={{ objectFit: "cover" }}
-                  />
-                ) : (
-                  <div style={{ padding: "20px", fontSize: "10px", color: "#999" }}>
-                    No Image
-                  </div>
-                )}
-              </div>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  margin: 0,
-                  lineHeight: "1.2",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                }}
-              >
-                {person.name}
-              </p>
-              <p
-                style={{
-                  fontSize: "11px",
-                  color: "#666",
-                  margin: "4px 0 0 0",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 1,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                }}
-              >
-                {person.character}
-              </p>
-            </div>
-          ))}
-        </div>
+        ) : (
+          <div style={{ 
+            padding: "40px", 
+            textAlign: "center", 
+            background: "#f5f5f5", 
+            borderRadius: "12px", 
+            color: "#999" 
+          }}>
+            予告編映像が登録されていません
+          </div>
+        )}
       </section>
 
       {/* =========================
@@ -335,6 +286,86 @@ export default async function MovieDetailPage({
             })}
           </div>
         )}
+      </section>
+
+      {/* =========================
+          キャスト一覧
+      ========================= */}
+      <section style={{ marginTop: "32px" }}>
+        <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "16px" }}>
+          主な出演者
+        </h2>
+        <div
+          style={{
+            display: "flex",
+            overflowX: "auto",
+            gap: "16px",
+            paddingBottom: "16px",
+            scrollbarWidth: "thin",
+          }}
+        >
+          {credits.cast.map((person) => (
+            <div
+              key={person.id}
+              style={{
+                flex: "0 0 100px",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: "100px",
+                  height: "100px",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  backgroundColor: "#eee",
+                  position: "relative",
+                  marginBottom: "8px",
+                }}
+              >
+                {person.profilePath ? (
+                  <Image
+                    src={`https://image.tmdb.org/t/p/w185${person.profilePath}`}
+                    alt={person.name}
+                    fill
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <div style={{ padding: "20px", fontSize: "10px", color: "#999" }}>
+                    No Image
+                  </div>
+                )}
+              </div>
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  margin: 0,
+                  lineHeight: "1.2",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {person.name}
+              </p>
+              <p
+                style={{
+                  fontSize: "11px",
+                  color: "#666",
+                  margin: "4px 0 0 0",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 1,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {person.character}
+              </p>
+            </div>
+          ))}
+        </div>
       </section>
     </main>
   );
