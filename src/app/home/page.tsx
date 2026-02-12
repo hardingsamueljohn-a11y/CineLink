@@ -4,6 +4,7 @@ import MovieCard from "@/components/movie/Card";
 import MovieGrid from "@/components/movie/Grid";
 import MovieSearchOverlay from "@/components/movie/MovieSearchOverlay";
 import MovieHero from "@/components/movie/Hero";
+import StarRating from "@/components/ui/StarRating"; 
 import { Review } from "@/types/review";
 import { Database } from "@/types/supabase";
 import { getNowPlayingMovies, getHeroMovies } from "@/lib/tmdb/api";
@@ -271,15 +272,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     </p>
                   </div>
 
-                  <div
-                    style={{
-                      color: "#f59e0b",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    評価: {review.rating} / 5
-                  </div>
+                  <StarRating rating={review.rating} />
                 </div>
 
                 <p

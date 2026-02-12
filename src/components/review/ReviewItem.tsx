@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Review } from "@/types/review";
+import StarRating from "@/components/ui/StarRating"; 
 
 type ReviewItemProps = {
   review: Review;
@@ -30,9 +31,12 @@ export default function ReviewItem({ review, tmdbId, currentUserId }: ReviewItem
           marginBottom: "8px",
         }}
       >
-        <p style={{ fontWeight: 700, margin: 0 }}>
-          ユーザー：{username} / 評価：{review.rating}
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <p style={{ fontWeight: 700, margin: 0 }}>
+            ユーザー：{username}
+          </p>
+          <StarRating rating={review.rating} />
+        </div>
 
         {isMyReview && (
           <Link

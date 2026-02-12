@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Review } from "@/types/review";
+import StarRating from "@/components/ui/StarRating"; 
 
 type ReviewsTabProps = {
   reviews: Review[];
@@ -46,11 +47,8 @@ export default function ReviewsTab({ reviews }: ReviewsTabProps) {
             >
               {review.movieTitle}
             </Link>
-            <div
-              style={{ color: "#f59e0b", fontSize: "14px", fontWeight: "bold" }}
-            >
-              評価: {review.rating} / 5
-            </div>
+            
+            <StarRating rating={review.rating} />
           </div>
 
           {/* 本文部分 */}
