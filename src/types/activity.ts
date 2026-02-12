@@ -9,4 +9,5 @@ export type ActivityItem = {
   username: string;
   movieTitle: string;
   posterPath: string | null;
+  avatarUrl: string | null;
 };
