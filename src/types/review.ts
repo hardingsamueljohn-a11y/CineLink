@@ -11,4 +11,5 @@ export type Review = {
   createdAt: string;
   profiles?: Profile;
   movieTitle?: string;
+  moviePosterPath?: string | null; 
 };
