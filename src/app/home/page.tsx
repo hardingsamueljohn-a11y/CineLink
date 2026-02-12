@@ -1,14 +1,13 @@
-import Link from "next/link";
-import Image from "next/image";
 import { supabaseServer } from "@/lib/supabase/server";
 import MovieCard from "@/components/movie/Card";
 import MovieGrid from "@/components/movie/Grid";
 import MovieSearchOverlay from "@/components/movie/MovieSearchOverlay";
 import MovieHero from "@/components/movie/Hero";
-import StarRating from "@/components/ui/StarRating";
 import { Review } from "@/types/review";
 import { Database } from "@/types/supabase";
 import { getNowPlayingMovies, getHeroMovies } from "@/lib/tmdb/api";
+import ActivityTimeline from "@/components/home/ActivityTimeline";
+import { ActivityItem } from "@/types/activity";
 
 type HomePageProps = {
   searchParams: Promise<{
@@ -95,7 +94,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           )
           .in("user_id", followingIds)
           .order("created_at", { ascending: false })
-          .limit(10);
+          .limit(20);
 
         if (reviewsData) {
           const rawReviews = reviewsData as unknown as ReviewRawResponse[];
@@ -123,7 +122,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           )
           .in("user_id", followingIds)
           .order("created_at", { ascending: false })
-          .limit(10);
+          .limit(20);
 
         if (wishlistsData) {
           timelineWishlists = wishlistsData as unknown as WishlistWithDetails[];
@@ -131,6 +130,33 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       }
     }
   }
+
+  // タイムライン表示用にレビューとウィッシュリストを統合し、降順（最新順）で整列
+  const allActivities: ActivityItem[] = [
+    ...timelineReviews.map((r) => ({
+      type: "review" as const,
+      id: r.id,
+      tmdbId: r.tmdbId,
+      rating: r.rating,
+      content: r.content,
+      isSpoiler: r.isSpoiler,
+      createdAt: r.createdAt,
+      username: r.profiles?.username || "名無しユーザー",
+      movieTitle: r.movies?.title || "タイトル不明",
+      posterPath: r.movies?.poster_path || null,
+    })),
+    ...timelineWishlists.map((w) => ({
+      type: "wishlist" as const,
+      id: `${w.user_id}-${w.tmdb_id}-${w.created_at}`,
+      tmdbId: w.tmdb_id,
+      createdAt: w.created_at,
+      username: w.profiles?.username || "名無しユーザー",
+      movieTitle: w.movies?.title || "タイトル不明",
+      posterPath: w.movies?.poster_path || null,
+    })),
+  ].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 
   // =========================
   // 自分の観たい一覧
@@ -224,195 +250,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <p style={{ color: "#666" }}>
             タイムラインを見るにはログインが必要です。
           </p>
+        ) : allActivities.length === 0 ? (
+          <p style={{ color: "#666" }}>まだアクティビティがありません。</p>
         ) : (
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px" }}
-          >
-            {timelineReviews.length === 0 && timelineWishlists.length === 0 ? (
-              <p style={{ color: "#666" }}>まだアクティビティがありません。</p>
-            ) : null}
-
-            {/* レビュー */}
-            {timelineReviews.map((review) => (
-              <div
-                key={review.id}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: "12px",
-                  padding: "12px",
-                  background: "#fff",
-                  display: "flex",
-                  gap: "16px",
-                  alignItems: "flex-start",
-                }}
-              >
-                <div
-                  style={{
-                    flex: "0 0 56px",
-                    position: "relative",
-                    height: "85px",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    backgroundColor: "#f3f4f6",
-                  }}
-                >
-                  {review.movies?.poster_path ? (
-                    <Image
-                      src={`https://image.tmdb.org/t/p/w92${review.movies.poster_path}`}
-                      alt={review.movies.title || "poster"}
-                      fill
-                      style={{ objectFit: "cover" }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        fontSize: "10px",
-                        color: "#999",
-                      }}
-                    >
-                      No Img
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    <div>
-                      <p style={{ fontWeight: 700, fontSize: "15px" }}>
-                        レビュー:{" "}
-                        {review.profiles?.username || "名無しユーザー"} さん
-                      </p>
-                      <p
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: 600,
-                          color: "#555",
-                        }}
-                      >
-                        『{review.movies?.title || "タイトル不明"}』
-                      </p>
-                    </div>
-                    <StarRating rating={review.rating} />
-                  </div>
-
-                  <p
-                    style={{
-                      marginTop: "6px",
-                      whiteSpace: "pre-wrap",
-                      fontSize: "14px",
-                      color: "#333",
-                      wordBreak: "break-word",
-                      overflowWrap: "anywhere",
-                    }}
-                  >
-                    {review.isSpoiler ? "※ネタバレあり" : review.content}
-                  </p>
-
-                  <div style={{ marginTop: "8px" }}>
-                    <Link
-                      href={`/movie/${review.tmdbId}`}
-                      style={{
-                        textDecoration: "underline",
-                        fontSize: "12px",
-                        color: "#666",
-                      }}
-                    >
-                      映画ページへ
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {timelineWishlists.map((wish, index) => (
-              <div
-                key={`${wish.user_id}-${wish.tmdb_id}-${index}`}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: "12px",
-                  padding: "12px",
-                  background: "#fff",
-                  display: "flex",
-                  gap: "16px",
-                  alignItems: "flex-start",
-                }}
-              >
-                <div
-                  style={{
-                    flex: "0 0 56px",
-                    position: "relative",
-                    height: "85px",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    backgroundColor: "#f3f4f6",
-                  }}
-                >
-                  {wish.movies?.poster_path ? (
-                    <Image
-                      src={`https://image.tmdb.org/t/p/w92${wish.movies.poster_path}`}
-                      alt={wish.movies.title || "poster"}
-                      fill
-                      style={{ objectFit: "cover" }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        fontSize: "10px",
-                        color: "#999",
-                      }}
-                    >
-                      No Img
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <p
-                    style={{
-                      fontWeight: 700,
-                      marginBottom: "4px",
-                      fontSize: "15px",
-                    }}
-                  >
-                    観たい追加: {wish.profiles?.username || "名無しユーザー"}{" "}
-                    さん
-                  </p>
-                  <p
-                    style={{ fontSize: "14px", fontWeight: 600, color: "#555" }}
-                  >
-                    『{wish.movies?.title || "タイトル不明"}』
-                  </p>
-                  <div style={{ marginTop: "12px" }}>
-                    <Link
-                      href={`/movie/${wish.tmdb_id}`}
-                      style={{
-                        textDecoration: "underline",
-                        fontSize: "12px",
-                        color: "#666",
-                      }}
-                    >
-                      映画ページへ
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ActivityTimeline initialActivities={allActivities} />
         )}
       </section>
 
