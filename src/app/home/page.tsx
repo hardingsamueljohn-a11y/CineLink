@@ -1,10 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { supabaseServer } from "@/lib/supabase/server";
 import MovieCard from "@/components/movie/Card";
 import MovieGrid from "@/components/movie/Grid";
 import MovieSearchOverlay from "@/components/movie/MovieSearchOverlay";
 import MovieHero from "@/components/movie/Hero";
-import StarRating from "@/components/ui/StarRating"; 
+import StarRating from "@/components/ui/StarRating";
 import { Review } from "@/types/review";
 import { Database } from "@/types/supabase";
 import { getNowPlayingMovies, getHeroMovies } from "@/lib/tmdb/api";
@@ -27,17 +28,17 @@ interface ReviewRawResponse {
   is_spoiler: boolean;
   created_at: string;
   profiles: { username: string | null } | null;
-  movies: { title: string | null } | null;
+  movies: { title: string | null; poster_path: string | null } | null;
 }
 
 type ReviewWithDetails = Omit<Review, "profiles"> & {
   profiles?: { username: string | null } | null;
-  movies?: { title: string | null } | null;
+  movies?: { title: string | null; poster_path: string | null } | null;
 };
 
 type WishlistWithDetails = Database["public"]["Tables"]["wishlists"]["Row"] & {
   profiles?: { username: string | null } | null;
-  movies?: { title: string | null } | null;
+  movies?: { title: string | null; poster_path: string | null } | null;
 };
 
 export default async function HomePage({ searchParams }: HomePageProps) {
@@ -89,7 +90,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             `
             id, user_id, tmdb_id, rating, content, is_spoiler, created_at,
             profiles ( username ),
-            movies ( title )
+            movies ( title, poster_path )
           `,
           )
           .in("user_id", followingIds)
@@ -117,7 +118,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             `
             *,
             profiles ( username ),
-            movies ( title )
+            movies ( title, poster_path )
           `,
           )
           .in("user_id", followingIds)
@@ -178,12 +179,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <MovieSearchOverlay />
 
       {/* =========================
-          Heroセクション（クライアントサイドでランダム選出）
+          Heroセクション
       ========================= */}
       <MovieHero movies={trendingMovies} />
 
       {/* =========================
-          公開中の映画セクション（横スクロール形式）
+          公開中の映画セクション
       ========================= */}
       <section style={{ marginBottom: "40px", marginTop: "24px" }}>
         <h2 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "12px" }}>
@@ -200,12 +201,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           }}
         >
           {nowPlayingMovies.slice(0, 15).map((movie) => (
-            <div
-              key={movie.id}
-              style={{
-                flex: "0 0 160px",
-              }}
-            >
+            <div key={movie.id} style={{ flex: "0 0 160px" }}>
               <MovieCard
                 id={movie.id}
                 title={movie.title}
@@ -245,66 +241,100 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   borderRadius: "12px",
                   padding: "12px",
                   background: "#fff",
+                  display: "flex",
+                  gap: "16px",
+                  alignItems: "flex-start",
                 }}
               >
                 <div
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    marginBottom: "6px",
+                    flex: "0 0 56px",
+                    position: "relative",
+                    height: "85px",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    backgroundColor: "#f3f4f6",
                   }}
                 >
-                  <div>
-                    <p style={{ fontWeight: 700 }}>
-                      レビュー: {review.profiles?.username || "名無しユーザー"}{" "}
-                      さん
-                    </p>
-                    <p
+                  {review.movies?.poster_path ? (
+                    <Image
+                      src={`https://image.tmdb.org/t/p/w92${review.movies.poster_path}`}
+                      alt={review.movies.title || "poster"}
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
+                  ) : (
+                    <div
                       style={{
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "#333",
-                        marginTop: "2px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        fontSize: "10px",
+                        color: "#999",
                       }}
                     >
-                      『{review.movies?.title || "タイトル不明"}』
-                    </p>
-                  </div>
-
-                  <StarRating rating={review.rating} />
+                      No Img
+                    </div>
+                  )}
                 </div>
 
-                <p
-                  style={{
-                    marginTop: "8px",
-                    whiteSpace: "pre-wrap",
-                    fontSize: "14px",
-                    wordBreak: "break-word",
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  {review.isSpoiler
-                    ? "※ネタバレあり（内容は隠しています）"
-                    : review.content}
-                </p>
-
-                <div style={{ marginTop: "8px" }}>
-                  <Link
-                    href={`/movie/${review.tmdbId}`}
+                <div style={{ flex: 1 }}>
+                  <div
                     style={{
-                      textDecoration: "underline",
-                      fontSize: "12px",
-                      color: "#333",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "4px",
                     }}
                   >
-                    映画ページへ
-                  </Link>
+                    <div>
+                      <p style={{ fontWeight: 700, fontSize: "15px" }}>
+                        レビュー:{" "}
+                        {review.profiles?.username || "名無しユーザー"} さん
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          color: "#555",
+                        }}
+                      >
+                        『{review.movies?.title || "タイトル不明"}』
+                      </p>
+                    </div>
+                    <StarRating rating={review.rating} />
+                  </div>
+
+                  <p
+                    style={{
+                      marginTop: "6px",
+                      whiteSpace: "pre-wrap",
+                      fontSize: "14px",
+                      color: "#333",
+                      wordBreak: "break-word",
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {review.isSpoiler ? "※ネタバレあり" : review.content}
+                  </p>
+
+                  <div style={{ marginTop: "8px" }}>
+                    <Link
+                      href={`/movie/${review.tmdbId}`}
+                      style={{
+                        textDecoration: "underline",
+                        fontSize: "12px",
+                        color: "#666",
+                      }}
+                    >
+                      映画ページへ
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
 
-            {/* ウィッシュ */}
             {timelineWishlists.map((wish, index) => (
               <div
                 key={`${wish.user_id}-${wish.tmdb_id}-${index}`}
@@ -313,27 +343,72 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   borderRadius: "12px",
                   padding: "12px",
                   background: "#fff",
+                  display: "flex",
+                  gap: "16px",
+                  alignItems: "flex-start",
                 }}
               >
-                <p style={{ fontWeight: 700, marginBottom: "4px" }}>
-                  観たい追加: {wish.profiles?.username || "名無しユーザー"} さん
-                </p>
+                <div
+                  style={{
+                    flex: "0 0 56px",
+                    position: "relative",
+                    height: "85px",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    backgroundColor: "#f3f4f6",
+                  }}
+                >
+                  {wish.movies?.poster_path ? (
+                    <Image
+                      src={`https://image.tmdb.org/t/p/w92${wish.movies.poster_path}`}
+                      alt={wish.movies.title || "poster"}
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        fontSize: "10px",
+                        color: "#999",
+                      }}
+                    >
+                      No Img
+                    </div>
+                  )}
+                </div>
 
-                <p style={{ fontSize: "14px", fontWeight: 600, color: "#333" }}>
-                  『{wish.movies?.title || "タイトル不明"}』
-                </p>
-
-                <div style={{ marginTop: "8px" }}>
-                  <Link
-                    href={`/movie/${wish.tmdb_id}`}
+                <div style={{ flex: 1 }}>
+                  <p
                     style={{
-                      textDecoration: "underline",
-                      fontSize: "12px",
-                      color: "#333",
+                      fontWeight: 700,
+                      marginBottom: "4px",
+                      fontSize: "15px",
                     }}
                   >
-                    映画ページへ
-                  </Link>
+                    観たい追加: {wish.profiles?.username || "名無しユーザー"}{" "}
+                    さん
+                  </p>
+                  <p
+                    style={{ fontSize: "14px", fontWeight: 600, color: "#555" }}
+                  >
+                    『{wish.movies?.title || "タイトル不明"}』
+                  </p>
+                  <div style={{ marginTop: "12px" }}>
+                    <Link
+                      href={`/movie/${wish.tmdb_id}`}
+                      style={{
+                        textDecoration: "underline",
+                        fontSize: "12px",
+                        color: "#666",
+                      }}
+                    >
+                      映画ページへ
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
@@ -348,7 +423,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <h2 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "12px" }}>
           自分の観たい一覧
         </h2>
-
         {!user ? (
           <p style={{ color: "#666" }}>
             観たい一覧を見るにはログインが必要です。

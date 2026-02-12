@@ -119,8 +119,7 @@ export default async function ProfilePage({
   // --- Reviews 取得（movies テーブルと join） ---
   const { data: reviewsData } = await supabase
     .from("reviews")
-    .select(
-      `
+    .select(`
       id,
       tmdb_id,
       rating,
@@ -128,15 +127,16 @@ export default async function ProfilePage({
       is_spoiler,
       created_at,
       movies ( 
-        title 
+        title,
+        poster_path
       )
-    `,
-    )
+    `)
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   const reviews: Review[] = (reviewsData ?? []).map((row) => {
     const movie = Array.isArray(row.movies) ? row.movies[0] : row.movies;
+
     return {
       id: row.id,
       userId: userId,
@@ -146,6 +146,7 @@ export default async function ProfilePage({
       isSpoiler: row.is_spoiler,
       createdAt: row.created_at,
       movieTitle: movie?.title ?? "タイトル不明",
+      moviePosterPath: movie?.poster_path ?? null,
     };
   });
 
