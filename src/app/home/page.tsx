@@ -26,17 +26,17 @@ interface ReviewRawResponse {
   content: string;
   is_spoiler: boolean;
   created_at: string;
-  profiles: { username: string | null } | null;
+  profiles: { username: string | null; avatar_url: string | null } | null;
   movies: { title: string | null; poster_path: string | null } | null;
 }
 
 type ReviewWithDetails = Omit<Review, "profiles"> & {
-  profiles?: { username: string | null } | null;
+  profiles?: { username: string | null; avatar_url: string | null } | null;
   movies?: { title: string | null; poster_path: string | null } | null;
 };
 
 type WishlistWithDetails = Database["public"]["Tables"]["wishlists"]["Row"] & {
-  profiles?: { username: string | null } | null;
+  profiles?: { username: string | null; avatar_url: string | null } | null;
   movies?: { title: string | null; poster_path: string | null } | null;
 };
 
@@ -88,7 +88,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           .select(
             `
             id, user_id, tmdb_id, rating, content, is_spoiler, created_at,
-            profiles ( username ),
+            profiles ( username, avatar_url ),
             movies ( title, poster_path )
           `,
           )
@@ -116,7 +116,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           .select(
             `
             *,
-            profiles ( username ),
+            profiles ( username, avatar_url ),
             movies ( title, poster_path )
           `,
           )
@@ -142,6 +142,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       isSpoiler: r.isSpoiler,
       createdAt: r.createdAt,
       username: r.profiles?.username || "名無しユーザー",
+      avatarUrl: r.profiles?.avatar_url || null,
       movieTitle: r.movies?.title || "タイトル不明",
       posterPath: r.movies?.poster_path || null,
     })),
@@ -151,6 +152,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       tmdbId: w.tmdb_id,
       createdAt: w.created_at,
       username: w.profiles?.username || "名無しユーザー",
+      avatarUrl: w.profiles?.avatar_url || null,
       movieTitle: w.movies?.title || "タイトル不明",
       posterPath: w.movies?.poster_path || null,
     })),

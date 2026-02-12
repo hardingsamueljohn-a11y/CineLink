@@ -10,7 +10,9 @@ type ActivityTimelineProps = {
   initialActivities: ActivityItem[];
 };
 
-export default function ActivityTimeline({ initialActivities }: ActivityTimelineProps) {
+export default function ActivityTimeline({
+  initialActivities,
+}: ActivityTimelineProps) {
   const [displayCount, setDisplayCount] = useState(5);
 
   // 表示する分だけ切り出し
@@ -33,7 +35,16 @@ export default function ActivityTimeline({ initialActivities }: ActivityTimeline
           }}
         >
           {/* 画像セクション */}
-          <div style={{ flex: "0 0 56px", position: "relative", height: "85px", borderRadius: "8px", overflow: "hidden", backgroundColor: "#f3f4f6" }}>
+          <div
+            style={{
+              flex: "0 0 56px",
+              position: "relative",
+              height: "85px",
+              borderRadius: "8px",
+              overflow: "hidden",
+              backgroundColor: "#f3f4f6",
+            }}
+          >
             {item.posterPath ? (
               <Image
                 src={`https://image.tmdb.org/t/p/w92${item.posterPath}`}
@@ -42,17 +53,81 @@ export default function ActivityTimeline({ initialActivities }: ActivityTimeline
                 style={{ objectFit: "cover" }}
               />
             ) : (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: "10px", color: "#999" }}>No Img</div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  fontSize: "10px",
+                  color: "#999",
+                }}
+              >
+                No Img
+              </div>
             )}
           </div>
 
           {/* テキストセクション */}
           <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "4px",
+              }}
+            >
               <div>
-                <p style={{ fontWeight: 700, fontSize: "15px" }}>
-                  {item.type === "review" ? "レビュー" : "観たい追加"}: {item.username} さん
-                </p>
+                {/* ユーザー情報 */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  <p style={{ fontWeight: 700, fontSize: "15px", margin: 0 }}>
+                    {item.type === "review" ? "レビュー" : "観たい追加"}:{" "}
+                    {item.username} さん
+                  </p>
+                  <div
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      position: "relative",
+                      backgroundColor: "#e5e7eb",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {item.avatarUrl ? (
+                      <Image
+                        src={item.avatarUrl}
+                        alt={item.username}
+                        fill
+                        style={{ objectFit: "cover" }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          height: "100%",
+                          fontSize: "12px",
+                          color: "#999",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {item.username[0]}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <p style={{ fontSize: "14px", fontWeight: 600, color: "#555" }}>
                   『{item.movieTitle}』
                 </p>
@@ -63,13 +138,29 @@ export default function ActivityTimeline({ initialActivities }: ActivityTimeline
             </div>
 
             {item.type === "review" && (
-              <p style={{ marginTop: "6px", whiteSpace: "pre-wrap", fontSize: "14px", color: "#333", wordBreak: "break-word", overflowWrap: "anywhere" }}>
+              <p
+                style={{
+                  marginTop: "6px",
+                  whiteSpace: "pre-wrap",
+                  fontSize: "14px",
+                  color: "#333",
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
+                }}
+              >
                 {item.isSpoiler ? "※ネタバレあり" : item.content}
               </p>
             )}
 
             <div style={{ marginTop: "8px" }}>
-              <Link href={`/movie/${item.tmdbId}`} style={{ textDecoration: "underline", fontSize: "12px", color: "#666" }}>
+              <Link
+                href={`/movie/${item.tmdbId}`}
+                style={{
+                  textDecoration: "underline",
+                  fontSize: "12px",
+                  color: "#666",
+                }}
+              >
                 映画ページへ
               </Link>
             </div>
