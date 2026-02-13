@@ -47,7 +47,6 @@ export default function ReviewForm({
           isSpoiler,
         });
       }
-      // redirect がサーバー側で走るので、ここには基本戻ってこない
     } catch (e) {
       setErrorMessage(e instanceof Error ? e.message : "エラーが発生しました");
       setIsLoading(false);
@@ -65,7 +64,6 @@ export default function ReviewForm({
 
     try {
       await deleteReview(existingReview.id, tmdbId);
-      // redirect がサーバー側で走るので、ここには基本戻ってこない
     } catch (e) {
       setErrorMessage(e instanceof Error ? e.message : "エラーが発生しました");
       setIsLoading(false);
@@ -81,6 +79,7 @@ export default function ReviewForm({
         border: "1px solid #ddd",
         borderRadius: "12px",
         background: "#fff",
+        boxSizing: "border-box", 
       }}
     >
       <h1 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "12px" }}>
@@ -102,6 +101,7 @@ export default function ReviewForm({
                 padding: "10px",
                 borderRadius: "10px",
                 border: "1px solid #ccc",
+                boxSizing: "border-box", 
               }}
             >
               <option value={1}>1</option>
@@ -128,6 +128,7 @@ export default function ReviewForm({
                 borderRadius: "10px",
                 border: "1px solid #ccc",
                 resize: "vertical",
+                boxSizing: "border-box",
               }}
             />
           </div>
@@ -155,6 +156,7 @@ export default function ReviewForm({
               background: "#fff",
               cursor: isLoading ? "not-allowed" : "pointer",
               opacity: isLoading ? 0.6 : 1,
+              boxSizing: "border-box",
             }}
           >
             {isLoading ? "処理中..." : isEditMode ? "更新する" : "投稿する"}
@@ -173,6 +175,7 @@ export default function ReviewForm({
                 background: "#fff",
                 cursor: isLoading ? "not-allowed" : "pointer",
                 opacity: isLoading ? 0.6 : 1,
+                boxSizing: "border-box",
               }}
             >
               削除する

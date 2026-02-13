@@ -111,8 +111,8 @@ export default async function MovieDetailPage({
       : [];
 
   return (
-    <main style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "8px" }}>
+    <main style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
+      <div style={{ marginBottom: "16px" }}>
         <HomeBackButton />
       </div>
 
@@ -123,7 +123,7 @@ export default async function MovieDetailPage({
       <MovieHeader movie={movie}>
         {/* 監督情報の表示 */}
         {credits.director && (
-          <p style={{ fontSize: "14px", color: "#666", marginBottom: "12px" }}>
+          <p style={{ fontSize: "14px", color: "#666", marginBottom: "16px" }}>
             監督:{" "}
             <span style={{ color: "#000", fontWeight: 600 }}>
               {credits.director.name}
@@ -131,13 +131,13 @@ export default async function MovieDetailPage({
           </p>
         )}
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <WishlistButton tmdbId={tmdbId} />
           <ReviewButton tmdbId={tmdbId} />
           <ShareButton tmdbId={tmdbId} />
         </div>
         {!user && (
-          <p style={{ marginTop: "12px", color: "#666", fontSize: "12px" }}>
+          <p style={{ marginTop: "16px", color: "#888", fontSize: "12px", lineHeight: "1.4" }}>
             ※観たい機能とレビュー機能を使うにはログインが必要です
           </p>
         )}
@@ -146,7 +146,7 @@ export default async function MovieDetailPage({
       {/* =========================
           予告編（動画）セクション
       ========================= */}
-      <section style={{ marginTop: "32px" }}>
+      <section style={{ marginTop: "48px" }}>
         <div
           style={{
             display: "flex",
@@ -155,7 +155,7 @@ export default async function MovieDetailPage({
             marginBottom: "16px",
           }}
         >
-          <h2 style={{ fontSize: "20px", fontWeight: 800, margin: 0 }}>
+          <h2 style={{ fontSize: "22px", fontWeight: 800, margin: 0 }}>
             予告編
           </h2>
           {/* YouTubeで探すリンク */}
@@ -164,7 +164,7 @@ export default async function MovieDetailPage({
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              fontSize: "12px",
+              fontSize: "13px",
               color: "#666",
               textDecoration: "underline",
             }}
@@ -180,8 +180,9 @@ export default async function MovieDetailPage({
               width: "100%",
               paddingTop: "56.25%",
               backgroundColor: "#000",
-              borderRadius: "12px",
+              borderRadius: "16px",
               overflow: "hidden",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
             }}
           >
             <iframe
@@ -202,11 +203,12 @@ export default async function MovieDetailPage({
         ) : (
           <div
             style={{
-              padding: "40px",
+              padding: "60px 20px",
               textAlign: "center",
-              background: "#f5f5f5",
-              borderRadius: "12px",
+              background: "#f9f9f9",
+              borderRadius: "16px",
               color: "#999",
+              border: "1px dashed #ddd",
             }}
           >
             予告編映像が登録されていません
@@ -217,8 +219,8 @@ export default async function MovieDetailPage({
       {/* =========================
           レビュー一覧
       ========================= */}
-      <section style={{ marginTop: "32px" }}>
-        <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "12px" }}>
+      <section style={{ marginTop: "48px" }}>
+        <h2 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "20px" }}>
           レビュー一覧
         </h2>
         <ReviewList 
@@ -231,8 +233,8 @@ export default async function MovieDetailPage({
       {/* =========================
           キャスト一覧
       ========================= */}
-      <section style={{ marginTop: "32px" }}>
-        <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "16px" }}>
+      <section style={{ marginTop: "48px", marginBottom: "40px" }}>
+        <h2 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "20px" }}>
           主な出演者
         </h2>
         <div
@@ -241,7 +243,8 @@ export default async function MovieDetailPage({
             overflowX: "auto",
             gap: "16px",
             paddingBottom: "16px",
-            scrollbarWidth: "thin",
+            scrollbarWidth: "none", 
+            msOverflowStyle: "none",
           }}
         >
           {credits.cast.map((person) => (
@@ -261,6 +264,7 @@ export default async function MovieDetailPage({
                   backgroundColor: "#eee",
                   position: "relative",
                   marginBottom: "8px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                 }}
               >
                 {person.profilePath ? (
@@ -272,7 +276,7 @@ export default async function MovieDetailPage({
                   />
                 ) : (
                   <div
-                    style={{ padding: "20px", fontSize: "10px", color: "#999" }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: "10px", color: "#999" }}
                   >
                     No Image
                   </div>
