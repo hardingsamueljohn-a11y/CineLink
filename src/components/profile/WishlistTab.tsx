@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link"; // 追加
+import Link from "next/link";
+
 type WishlistItem = {
   tmdbId: number;
   title: string | null;
@@ -24,7 +25,7 @@ export default function WishlistTab({ wishlist }: WishlistTabProps) {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
         gap: "12px",
       }}
     >
@@ -44,16 +45,25 @@ export default function WishlistTab({ wishlist }: WishlistTabProps) {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                transition: "transform 0.2s",
               }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "scale(1.02)")
+              }
+              onMouseLeave={(e) => (
+                (e.currentTarget.style.opacity = "1"),
+                (e.currentTarget.style.transform = "scale(1)")
+              )}
             >
               <div
                 style={{
-                  width: "120px",
-                  height: "180px",
-                  borderRadius: "8px",
+                  width: "100%",
+                  aspectRatio: "2 / 3",
+                  borderRadius: "12px",
                   overflow: "hidden",
                   position: "relative",
                   background: "#eee",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 }}
               >
                 {imageUrl ? (
@@ -61,20 +71,36 @@ export default function WishlistTab({ wishlist }: WishlistTabProps) {
                     src={imageUrl}
                     alt={item.title ?? "No title"}
                     fill
-                    sizes="120px"
+                    sizes="(max-width: 768px) 150px, 200px"
                     style={{ objectFit: "cover" }}
                   />
                 ) : (
-                  <span style={{ fontSize: "12px", color: "#999" }}>NO IMAGE</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                      fontSize: "12px",
+                      color: "#999",
+                    }}
+                  >
+                    NO IMAGE
+                  </div>
                 )}
               </div>
               <p
                 style={{
-                  marginTop: "6px",
-                  fontSize: "12px",
+                  marginTop: "10px",
+                  fontSize: "14px",
+                  fontWeight: "600",
                   textAlign: "center",
                   color: "#333",
                   wordBreak: "break-word",
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 2,
+                  overflow: "hidden",
                 }}
               >
                 {item.title ?? "タイトル不明"}

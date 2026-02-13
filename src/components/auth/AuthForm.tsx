@@ -92,6 +92,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         border: "1px solid #ddd",
         borderRadius: "12px",
         background: "#fff",
+        boxSizing: "border-box", 
       }}
     >
       <h1 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "16px" }}>
@@ -114,6 +115,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 padding: "10px",
                 borderRadius: "10px",
                 border: "1px solid #ccc",
+                boxSizing: "border-box", // パディングではみ出さないように修正
+                fontSize: "16px", // iOSの自動ズーム防止
               }}
             />
           </div>
@@ -132,6 +135,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 padding: "10px",
                 borderRadius: "10px",
                 border: "1px solid #ccc",
+                boxSizing: "border-box", // パディングではみ出さないように修正
+                fontSize: "16px", // iOSの自動ズーム防止
               }}
             />
           </div>
@@ -145,9 +150,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
               padding: "10px 14px",
               borderRadius: "10px",
               border: "1px solid #333",
-              background: "#fff",
+              background: "#333", 
+              color: "#fff",      
               cursor: isLoading ? "not-allowed" : "pointer",
               opacity: isLoading ? 0.6 : 1,
+              WebkitAppearance: "none", 
+              appearance: "none",
             }}
           >
             {isLoading ? "処理中..." : isLogin ? "ログイン" : "登録"}

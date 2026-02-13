@@ -47,12 +47,12 @@ export default async function ProfilePage({
     return (
       <main
         style={{
-          padding: "24px",
-          maxWidth: "1000px", 
-          margin: "0 auto", 
+          padding: "40px 16px",
+          maxWidth: "1000px",
+          margin: "0 auto",
           display: "flex",
           flexDirection: "column",
-          gap: "16px", 
+          gap: "24px",
         }}
       >
         <div>
@@ -119,7 +119,8 @@ export default async function ProfilePage({
   // --- Reviews 取得（movies テーブルと join） ---
   const { data: reviewsData } = await supabase
     .from("reviews")
-    .select(`
+    .select(
+      `
       id,
       tmdb_id,
       rating,
@@ -130,7 +131,8 @@ export default async function ProfilePage({
         title,
         poster_path
       )
-    `)
+    `,
+    )
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -151,8 +153,10 @@ export default async function ProfilePage({
   });
 
   return (
-    <main style={{ padding: "24px", maxWidth: "800px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "20px" }}>
+    <main
+      style={{ padding: "20px 16px", maxWidth: "1000px", margin: "0 auto" }}
+    >
+      <div style={{ marginBottom: "24px" }}>
         <HomeBackButton />
       </div>
 
@@ -172,22 +176,22 @@ export default async function ProfilePage({
       {isMyProfile && (
         <section
           style={{
-            margin: "32px 0",
-            padding: "20px",
+            margin: "40px 0",
+            padding: "24px",
             border: "1px solid #eee",
-            borderRadius: "12px",
+            borderRadius: "16px",
             background: "#fcfcfc",
           }}
         >
           <h3
-            style={{ fontSize: "16px", fontWeight: 700, marginBottom: "12px" }}
+            style={{ fontSize: "18px", fontWeight: 700, marginBottom: "16px" }}
           >
             友人を検索
           </h3>
           <form
             action={`/profile/${userId}`}
             method="GET"
-            style={{ display: "flex", gap: "8px" }}
+            style={{ display: "flex", gap: "10px" }}
           >
             <input
               name="user_q"
@@ -195,19 +199,25 @@ export default async function ProfilePage({
               placeholder="ユーザー名を入力..."
               style={{
                 flex: 1,
-                padding: "10px",
-                borderRadius: "8px",
+                padding: "8px 12px",
+                borderRadius: "10px",
                 border: "1px solid #ccc",
+                fontSize: "16px",
+                outlineColor: "#000",
               }}
             />
             <button
               type="submit"
               style={{
-                padding: "10px 16px",
+                padding: "8px 20px",
                 background: "#333",
                 color: "#fff",
-                borderRadius: "8px",
+                borderRadius: "10px",
                 cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "15px",
+                border: "none",
+                whiteSpace: "nowrap",
               }}
             >
               検索
@@ -216,13 +226,13 @@ export default async function ProfilePage({
 
           {/* 検索結果 */}
           {user_q && (
-            <div style={{ marginTop: "16px" }}>
+            <div style={{ marginTop: "20px" }}>
               {foundUsers.length === 0 ? (
                 <p style={{ fontSize: "14px", color: "#666" }}>
                   見つかりませんでした
                 </p>
               ) : (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
                   {foundUsers.map((u) => (
                     <Link
                       key={u.id}
@@ -231,12 +241,13 @@ export default async function ProfilePage({
                     >
                       <div
                         style={{
-                          padding: "8px 12px",
+                          padding: "10px 16px",
                           background: "#fff",
                           border: "1px solid #ddd",
-                          borderRadius: "20px",
-                          fontSize: "13px",
+                          borderRadius: "24px",
+                          fontSize: "14px",
                           color: "#333",
+                          fontWeight: "500",
                         }}
                       >
                         @{u.username}
@@ -250,7 +261,9 @@ export default async function ProfilePage({
         </section>
       )}
 
-      <ProfileTabs wishlist={wishlist} reviews={reviews} />
+      <div style={{ marginTop: "40px" }}>
+        <ProfileTabs wishlist={wishlist} reviews={reviews} />
+      </div>
     </main>
   );
 }

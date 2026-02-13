@@ -198,7 +198,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   myWishlistMovies.forEach((m) => movieMap.set(m.tmdb_id, m));
 
   return (
-    <main style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
+    <main style={{ padding: "20px 16px", maxWidth: "1000px", margin: "0 auto" }}>
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: 700, margin: 0 }}>Home</h1>
       </div>
@@ -222,14 +222,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           style={{
             display: "flex",
             overflowX: "auto",
-            gap: "16px",
+            gap: "12px",
             paddingBottom: "12px",
-            scrollbarWidth: "thin",
+            scrollbarWidth: "none", 
             msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch", 
           }}
         >
           {nowPlayingMovies.slice(0, 15).map((movie) => (
-            <div key={movie.id} style={{ flex: "0 0 160px" }}>
+            <div key={movie.id} style={{ flex: "0 0 140px" }}> 
               <MovieCard
                 id={movie.id}
                 title={movie.title}

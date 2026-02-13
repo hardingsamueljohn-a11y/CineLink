@@ -30,7 +30,14 @@ export default function ReviewsTab({ reviews }: ReviewsTabProps) {
           }}
         >
           {/* 左側：ポスター画像 */}
-          <div style={{ flex: "0 0 56px", position: "relative", height: "85px", borderRadius: "8px", overflow: "hidden", backgroundColor: "#f3f4f6" }}>
+          <div style={{ 
+            flex: "0 0 70px", 
+            position: "relative", 
+            height: "105px", 
+            borderRadius: "8px", 
+            overflow: "hidden", 
+            backgroundColor: "#f3f4f6" 
+          }}>
             {review.moviePosterPath ? (
               <Image
                 src={`https://image.tmdb.org/t/p/w92${review.moviePosterPath}`}
@@ -39,12 +46,12 @@ export default function ReviewsTab({ reviews }: ReviewsTabProps) {
                 style={{ objectFit: "cover" }}
               />
             ) : (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: "10px", color: "#999" }}>No Img</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: "11px", color: "#999" }}>No Img</div>
             )}
           </div>
 
           {/* 右側：コンテンツ */}
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             {/* ヘッダー部分：タイトルと評価 */}
             <div
               style={{
@@ -52,23 +59,27 @@ export default function ReviewsTab({ reviews }: ReviewsTabProps) {
                 justifyContent: "space-between",
                 alignItems: "flex-start",
                 marginBottom: "8px",
+                flexWrap: "wrap", // モバイルでの星突き出し防止
+                gap: "8px",
               }}
             >
               <Link
                 href={`/movie/${review.tmdbId}`}
                 style={{
-                  fontSize: "16px",
+                  fontSize: "17px", 
                   fontWeight: 800,
                   color: "#333",
                   textDecoration: "none",
-                  flex: 1,
+                  flex: "1 1 200px",
                   marginRight: "8px",
                 }}
               >
-                {review.movieTitle}
+                『{review.movieTitle}』
               </Link>
               
-              <StarRating rating={review.rating} />
+              <div style={{ flexShrink: 0 }}>
+                <StarRating rating={review.rating} />
+              </div>
             </div>
 
             {/* 本文部分 */}
@@ -79,7 +90,7 @@ export default function ReviewsTab({ reviews }: ReviewsTabProps) {
                     style={{
                       color: "crimson",
                       cursor: "pointer",
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontWeight: "bold",
                     }}
                   >
@@ -88,7 +99,7 @@ export default function ReviewsTab({ reviews }: ReviewsTabProps) {
                   <div
                     style={{
                       marginTop: "8px",
-                      padding: "10px",
+                      padding: "12px",
                       background: "#f9f9f9",
                       borderRadius: "8px",
                       whiteSpace: "pre-wrap",
