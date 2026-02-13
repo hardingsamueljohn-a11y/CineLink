@@ -103,29 +103,33 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
       alignItems: "center",
       justifyContent: "center",
       zIndex: 1000,
-      padding: "20px"
+      padding: "20px", 
+      boxSizing: "border-box"
     }}>
       <div style={{
         backgroundColor: "#fff",
         padding: "24px",
         borderRadius: "16px",
         width: "100%",
-        maxWidth: "400px",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
+        maxWidth: "400px", 
+        boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+        boxSizing: "border-box",
+        margin: "auto", 
       }}>
-        <h2 style={{ marginBottom: "20px", fontSize: "18px", fontWeight: "bold" }}>プロフィールを編集</h2>
+        <h2 style={{ marginBottom: "20px", fontSize: "20px", fontWeight: "bold", textAlign: "center" }}>プロフィールを編集</h2>
         
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           
           {/* プロフィール画像編集部分 */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
             <div style={{
-              width: "80px",
-              height: "80px",
+              width: "100px", 
+              height: "100px",
               borderRadius: "50%",
               overflow: "hidden",
               background: "#eee",
-              flexShrink: 0
+              flexShrink: 0,
+              border: "1px solid #ddd"
             }}>
               {previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -151,7 +155,7 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              style={{ fontSize: "12px", color: "#0070f3", cursor: "pointer", background: "none", border: "none" }}
+              style={{ fontSize: "14px", color: "#0070f3", cursor: "pointer", background: "none", border: "none", fontWeight: 600 }}
             >
               画像を変更
             </button>
@@ -166,7 +170,7 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
 
           {/* ユーザー名入力フィールド */}
           <div>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: "bold", marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "14px", fontWeight: "bold", marginBottom: "8px" }}>
               ユーザー名
             </label>
             <input
@@ -174,30 +178,47 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "14px" }}
+              style={{ 
+                width: "100%", 
+                padding: "12px", 
+                borderRadius: "8px", 
+                border: "1px solid #ccc", 
+                fontSize: "16px", 
+                boxSizing: "border-box",
+                outlineColor: "#000"
+              }}
             />
           </div>
 
           {/* 自己紹介入力フィールド */}
           <div>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: "bold", marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "14px", fontWeight: "bold", marginBottom: "8px" }}>
               自己紹介
             </label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={4}
-              style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "14px", resize: "none" }}
+              style={{ 
+                width: "100%", 
+                padding: "12px", 
+                borderRadius: "8px", 
+                border: "1px solid #ccc", 
+                fontSize: "16px", 
+                resize: "none",
+                boxSizing: "border-box",
+                outlineColor: "#000"
+              }}
             />
           </div>
 
           {/* アクションボタン */}
-          <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
+          <div style={{ display: "flex", gap: "12px", justifyContent: "stretch", marginTop: "10px" }}>
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              style={{ padding: "8px 16px", cursor: "pointer", background: "#f5f5f5", border: "none", borderRadius: "8px", fontSize: "14px" }}
+              style={{ flex: 1, padding: "12px", cursor: "pointer", background: "#f5f5f5", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 600 }}
             >
               キャンセル
             </button>
@@ -205,13 +226,15 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
               type="submit"
               disabled={loading}
               style={{
-                padding: "8px 16px",
+                flex: 1,
+                padding: "12px",
                 cursor: "pointer",
                 background: "#000",
                 color: "#fff",
                 border: "none",
                 borderRadius: "8px",
-                fontSize: "14px"
+                fontSize: "14px",
+                fontWeight: 600
               }}
             >
               {loading ? "保存中..." : "保存する"}

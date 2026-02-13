@@ -69,13 +69,15 @@ export default function ActivityTimeline({
           </div>
 
           {/* テキストセクション */}
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}> 
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "flex-start",
                 marginBottom: "4px",
+                flexWrap: "wrap", 
+                gap: "8px", 
               }}
             >
               <div>
@@ -133,7 +135,9 @@ export default function ActivityTimeline({
                 </p>
               </div>
               {item.type === "review" && item.rating !== undefined && (
-                <StarRating rating={item.rating} />
+                <div style={{ flexShrink: 0 }}> 
+                  <StarRating rating={item.rating} />
+                </div>
               )}
             </div>
 

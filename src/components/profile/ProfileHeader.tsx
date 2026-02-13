@@ -36,20 +36,26 @@ export default function ProfileHeader({
       style={{
         border: "1px solid #ddd",
         borderRadius: "16px",
-        padding: "20px",
+        padding: "24px", 
         background: "#fff",
       }}
     >
-      <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-        {/* Avatar */}
+      <div style={{ 
+        display: "flex", 
+        gap: "24px", 
+        alignItems: "flex-start", 
+        flexWrap: "wrap",
+        justifyContent: "flex-start" 
+      }}>
         <div
           style={{
-            width: "80px",
-            height: "80px",
+            width: "100px",
+            height: "100px",
             borderRadius: "50%",
             overflow: "hidden",
             background: "#eee",
             flexShrink: 0,
+            border: "1px solid #eee",
           }}
         >
           {avatarUrl ? (
@@ -68,7 +74,7 @@ export default function ProfileHeader({
                 alignItems: "center",
                 justifyContent: "center",
                 color: "#999",
-                fontSize: "12px",
+                fontSize: "14px",
               }}
             >
               NO IMAGE
@@ -77,9 +83,25 @@ export default function ProfileHeader({
         </div>
 
         {/* User Info */}
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <h1 style={{ fontSize: "20px", fontWeight: 800 }}>
+        <div style={{ 
+          flex: "1 1 300px", 
+          minWidth: "0" 
+        }}>
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "12px", 
+            flexWrap: "wrap",
+            marginBottom: "8px" 
+          }}>
+            <h1 style={{ 
+              fontSize: "24px", 
+              fontWeight: 800, 
+              margin: 0,
+              wordBreak: "break-word", 
+              overflowWrap: "anywhere",
+              lineHeight: "1.2"
+            }}>
               {username || "Unknown User"}
             </h1>
 
@@ -88,12 +110,14 @@ export default function ProfileHeader({
               <button
                 onClick={() => setIsModalOpen(true)}
                 style={{
-                  padding: "4px 12px",
-                  fontSize: "12px",
+                  padding: "6px 16px",
+                  fontSize: "13px",
                   cursor: "pointer",
-                  borderRadius: "16px",
+                  borderRadius: "20px",
                   border: "1px solid #ccc",
                   background: "#fff",
+                  fontWeight: 600,
+                  whiteSpace: "nowrap"
                 }}
               >
                 編集
@@ -103,10 +127,12 @@ export default function ProfileHeader({
 
           <p
             style={{
-              marginTop: "6px",
-              fontSize: "14px",
-              color: "#666",
+              marginTop: "10px",
+              fontSize: "15px",
+              color: "#555",
               whiteSpace: "pre-wrap",
+              lineHeight: "1.5",
+              wordBreak: "break-word"
             }}
           >
             {bio || "自己紹介はまだありません。"}
@@ -115,10 +141,11 @@ export default function ProfileHeader({
           <div
             style={{
               display: "flex",
-              gap: "16px",
-              marginTop: "10px",
-              fontSize: "13px",
+              gap: "20px",
+              marginTop: "16px",
+              fontSize: "14px",
               color: "#333",
+              flexWrap: "wrap" 
             }}
           >
             {/* フォロー数へのリンク */}
@@ -128,7 +155,7 @@ export default function ProfileHeader({
               onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.7")}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
             >
-              <span style={{ fontWeight: "bold" }}>{followingCount}</span> フォロー
+              <span style={{ fontWeight: "bold", fontSize: "16px" }}>{followingCount}</span> フォロー
             </Link>
 
             {/* フォロワー数へのリンク */}
@@ -138,18 +165,20 @@ export default function ProfileHeader({
               onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.7")}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
             >
-              <span style={{ fontWeight: "bold" }}>{followerCount}</span> フォロワー
+              <span style={{ fontWeight: "bold", fontSize: "16px" }}>{followerCount}</span> フォロワー
             </Link>
           </div>
         </div>
 
         {/* Follow Button */}
         {!isMyProfile && currentUserId && (
-          <FollowButton
-            followerId={currentUserId}
-            followingId={userId}
-            initialIsFollowing={initialIsFollowing}
-          />
+          <div style={{ marginLeft: "auto", alignSelf: "flex-start" }}>
+            <FollowButton
+              followerId={currentUserId}
+              followingId={userId}
+              initialIsFollowing={initialIsFollowing}
+            />
+          </div>
         )}
       </div>
 

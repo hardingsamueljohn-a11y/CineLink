@@ -55,13 +55,15 @@ export default async function FollowersPage({ params }: FollowersPageProps) {
     .filter((user): user is SearchUser => user !== null);
 
   return (
-    <main style={{ padding: "24px", maxWidth: "600px", margin: "0 auto" }}>
-      <ProfileBackButton userId={userId} />
+    <main style={{ padding: "20px 16px", maxWidth: "800px", margin: "0 auto" }}>
+      <div style={{ marginBottom: "16px" }}>
+        <ProfileBackButton userId={userId} />
+      </div>
 
-      <h1 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "4px" }}>
+      <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "4px" }}>
         {profile?.username || "ユーザー"}
       </h1>
-      <p style={{ fontSize: "14px", color: "#666", marginBottom: "24px" }}>
+      <p style={{ fontSize: "15px", color: "#666", marginBottom: "32px" }}>
         @{profile?.username}
       </p>
 
@@ -69,7 +71,7 @@ export default async function FollowersPage({ params }: FollowersPageProps) {
         style={{
           display: "flex",
           borderBottom: "1px solid #eee",
-          marginBottom: "10px",
+          marginBottom: "16px",
         }}
       >
         <Link
@@ -77,9 +79,10 @@ export default async function FollowersPage({ params }: FollowersPageProps) {
           style={{
             flex: 1,
             textAlign: "center",
-            padding: "12px",
+            padding: "14px",
             textDecoration: "none",
             color: "#666",
+            fontSize: "16px",
           }}
         >
           フォロー中
@@ -89,10 +92,11 @@ export default async function FollowersPage({ params }: FollowersPageProps) {
           style={{
             flex: 1,
             textAlign: "center",
-            padding: "12px",
+            padding: "14px",
             textDecoration: "none",
             color: "#000",
             fontWeight: "bold",
+            fontSize: "16px",
             borderBottom: "2px solid #000",
           }}
         >
