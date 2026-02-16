@@ -73,23 +73,23 @@ export default function ReviewForm({
   return (
     <div
       style={{
-        maxWidth: "700px",
-        margin: "0 auto",
-        padding: "16px",
+        maxWidth: "800px", 
+        margin: "20px auto",
+        padding: "24px",
         border: "1px solid #ddd",
         borderRadius: "12px",
         background: "#fff",
         boxSizing: "border-box", 
       }}
     >
-      <h1 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "12px" }}>
+      <h1 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "16px" }}>
         {isEditMode ? "レビュー編集" : "レビュー投稿"}
       </h1>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: "grid", gap: "12px" }}>
+        <div style={{ display: "grid", gap: "14px" }}>
           <div>
-            <label style={{ display: "block", fontSize: "12px" }}>
+            <label style={{ display: "block", fontSize: "12px", marginBottom: "4px" }}>
               評価（1〜5）
             </label>
 
@@ -102,6 +102,8 @@ export default function ReviewForm({
                 borderRadius: "10px",
                 border: "1px solid #ccc",
                 boxSizing: "border-box", 
+                fontSize: "16px", 
+                background: "#fff",
               }}
             >
               <option value={1}>1</option>
@@ -113,34 +115,37 @@ export default function ReviewForm({
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "12px" }}>
+            <label style={{ display: "block", fontSize: "12px", marginBottom: "4px" }}>
               レビュー本文（1000文字以内）
             </label>
 
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={6}
+              rows={8}
               placeholder="感想を書いてください"
               style={{
                 width: "100%",
-                padding: "10px",
+                padding: "12px",
                 borderRadius: "10px",
                 border: "1px solid #ccc",
                 resize: "vertical",
                 boxSizing: "border-box",
+                fontSize: "16px", 
+                lineHeight: "1.6",
               }}
             />
           </div>
 
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center", padding: "4px 0" }}>
             <input
               id="spoiler"
               type="checkbox"
               checked={isSpoiler}
               onChange={(e) => setIsSpoiler(e.target.checked)}
+              style={{ width: "18px", height: "18px" }}
             />
-            <label htmlFor="spoiler" style={{ fontSize: "12px" }}>
+            <label htmlFor="spoiler" style={{ fontSize: "14px", cursor: "pointer" }}>
               ネタバレあり
             </label>
           </div>
@@ -150,16 +155,21 @@ export default function ReviewForm({
             disabled={isLoading}
             style={{
               width: "100%",
-              padding: "10px 14px",
+              padding: "12px 14px",
               borderRadius: "10px",
               border: "1px solid #333",
-              background: "#fff",
+              background: "#333", 
+              color: "#fff", 
+              fontSize: "16px",
+              fontWeight: 700,
               cursor: isLoading ? "not-allowed" : "pointer",
               opacity: isLoading ? 0.6 : 1,
               boxSizing: "border-box",
+              WebkitAppearance: "none", 
+              appearance: "none",
             }}
           >
-            {isLoading ? "処理中..." : isEditMode ? "更新する" : "投稿する"}
+            {isLoading ? "処理中..." : isEditMode ? "更新を保存する" : "レビューを投稿する"}
           </button>
 
           {isEditMode ? (
@@ -173,9 +183,14 @@ export default function ReviewForm({
                 borderRadius: "10px",
                 border: "1px solid #ccc",
                 background: "#fff",
+                color: "#666",
+                fontSize: "14px",
                 cursor: isLoading ? "not-allowed" : "pointer",
                 opacity: isLoading ? 0.6 : 1,
                 boxSizing: "border-box",
+                WebkitAppearance: "none",
+                appearance: "none",
+                marginTop: "4px",
               }}
             >
               削除する
@@ -183,12 +198,12 @@ export default function ReviewForm({
           ) : null}
 
           {errorMessage ? (
-            <p style={{ color: "crimson", fontSize: "12px" }}>{errorMessage}</p>
+            <p style={{ color: "crimson", fontSize: "12px", textAlign: "center" }}>{errorMessage}</p>
           ) : null}
         </div>
       </form>
 
-      <p style={{ marginTop: "10px", fontSize: "12px", color: "#666" }}>
+      <p style={{ marginTop: "16px", fontSize: "12px", color: "#888", textAlign: "center" }}>
         ※ログインしていない場合は投稿できません。
       </p>
     </div>
