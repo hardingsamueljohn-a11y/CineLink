@@ -2,12 +2,16 @@
 
 import { useRouter } from "next/navigation";
 
-export default function ProfileBackButton() {
+type ProfileBackButtonProps = {
+  userId: string;
+};
+
+export default function ProfileBackButton({ userId }: ProfileBackButtonProps) {
   const router = useRouter();
 
   return (
     <button
-      onClick={() => router.back()} 
+      onClick={() => router.push(`/profile/${userId}`)} // userIdを使って特定のプロフィールに戻る
       style={{
         display: "inline-flex",
         alignItems: "center",
