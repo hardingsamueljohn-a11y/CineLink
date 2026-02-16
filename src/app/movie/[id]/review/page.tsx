@@ -1,4 +1,4 @@
-import Link from "next/link";
+import MovieBackButton from "@/components/movie/MovieBackButton";
 import ReviewForm from "@/components/review/ReviewForm";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Review } from "@/types/review";
@@ -17,9 +17,7 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
     return (
       <main style={{ padding: "24px" }}>
         <p>不正な映画IDです。</p>
-        <Link href="/home" style={{ textDecoration: "underline" }}>
-          /homeへ戻る
-        </Link>
+        <MovieBackButton tmdbId={0} />
       </main>
     );
   }
@@ -56,13 +54,10 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
 
   return (
     <main style={{ padding: "24px" }}>
-      <div style={{ maxWidth: "700px", margin: "0 auto", marginBottom: "12px" }}>
-        <Link
-          href={`/movie/${tmdbId}`}
-          style={{ textDecoration: "underline", fontSize: "12px" }}
-        >
-          ← 映画詳細へ戻る
-        </Link>
+      <div
+        style={{ maxWidth: "800px", margin: "0 auto", marginBottom: "16px" }}
+      >
+        <MovieBackButton tmdbId={tmdbId} />
       </div>
 
       <ReviewForm tmdbId={tmdbId} existingReview={existingReview} />
