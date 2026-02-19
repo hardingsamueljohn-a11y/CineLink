@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎬 CineLink（シネリンク）
 
-## Getting Started
+**「あの時話したあの映画、なんだっけ？」をゼロにする。** 信頼できる友人と映画でつながる、ソーシャル映画備忘録アプリ。
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌟 概要
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+CineLinkは、不特定多数に向けた批評ではなく、**「信頼できる友人との共有」** を目的に開発された、プライベートな映画備忘録アプリです。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**「あの映画なんだっけ？」を、会話の続きに変える。**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+カフェや居酒屋で「最近面白い映画あった？」という会話中にその場でリストへ保存。  
+週末に「今日何観よう？」となった際、友人が高評価していた作品をチェック。
 
-## Learn More
+既存のレビューサイトは「世の中への発信」がメインですが、CineLinkは **「大切な人との間で映画をストックし、共有する」** という、新しい映画の楽しみ方を提案します。
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ✨ 主な機能
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 🔍 **映画検索・詳細閲覧**: TMDB APIを活用した最新の映画情報の取得と表示。
+- 📝 **レビュー投稿**: 5段階評価と「ネタバレ防止」フラグを備えた感想記録。
+- 📌 **ウィッシュリスト**: 気になった映画を「観たいリスト」として即座に保存。
+- 👥 **ソーシャル機能**: 友人をフォローし、タイムラインでリアルタイムに友人の活動（レビュー・ウィッシュリスト）を確認。
+- 📱 **レスポンシブ対応**: 外出先でも操作しやすいモバイルフレンドリーなUIデザイン。
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛠 使用技術
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Frontend
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Inline Styles (今後、保守性向上のため Tailwind CSS への移行を計画中)
+
+### Backend / Infrastructure
+- **Database / Auth**: Supabase (PostgreSQL / Supabase Auth)
+- **API**: TMDB (The Movie Database) API
+- **Deployment**: Vercel
+
+---
+
+## 💎 こだわったポイント
+
+1. **UXの一貫性と使いやすさ**:
+   ユーザーが直感的に操作できるよう、ナビゲーションや「戻る」ボタンのデザインを共通コンポーネント化。全体的なデザインのトーンを揃えることに注力しました。
+2. **ネタバレへの配慮**:
+   親しい友人同士だからこそ、映画の楽しみを奪わないよう「ネタバレ注意」のフラグ機能を実装。詳細を開く前に内容を隠蔽する仕組みにしています。
+3. **実体験に基づいたモバイル操作性**:
+   「会話中にその場でメモする」シーンを想定。スマホでの片手操作でもスムーズに入力・保存ができるよう、ボタンサイズやフォーム挙動を調整しました。
+4. **視覚的な備忘録**:
+   単なるメモ帳ではなく、映画ポスター画像と一緒に視覚的に保存。次に友人と会った際、アプリを見せながら「これ観たよ！」「これ観たいって言ってたよね」と会話が弾むきっかけを提供します。
+
+---
+
+## 🏃‍♂️ 今後のアップデート予定
+
+- [ ] **セキュリティの強化**: RLS（Row Level Security）によるデータアクセス制御の実装
+- [ ] **堅牢性の向上**: 入力値のサニタイズ処理の徹底
+- [ ] **コードの健全化**: コンポーネントの更なる整理とUIコンポーネントの完全統一
+- [ ] **プライバシー設定**: フォロー関係に基づいたタイムラインの公開範囲設定
+- [ ] **パフォーマンス最適化**: Tailwind CSSの導入によるCSS管理の効率化
+
+---
+
+## 👨‍💻 開発の背景
+「映画好きの友人と話す時間は楽しいけれど、おすすめされた作品をメモしきれず、観る機会を逃してしまう」という自身の課題からこのアプリは生まれました。メモ帳よりも視覚的に楽しく、SNSよりもプライベートな、ちょうどいい距離感の「映画の置き場所」を目指しています。
