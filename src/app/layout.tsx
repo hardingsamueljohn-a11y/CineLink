@@ -3,8 +3,8 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "MovieApp - 映画レビューSNS",
-  description: "お気に入りの映画を記録しよう",
+  title: "CineLink | 友人と繋がるソーシャル映画備忘録",
+  description: "CineLinkは、気になった映画を保存し、信頼できる友人とレビューを共有するためのソーシャル備忘録アプリです。"
 };
 
 export default function RootLayout({
