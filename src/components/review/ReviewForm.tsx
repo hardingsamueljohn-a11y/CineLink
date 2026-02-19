@@ -30,6 +30,12 @@ export default function ReviewForm({
     setIsLoading(true);
     setErrorMessage("");
 
+    if (!content.trim()) {
+      setErrorMessage("レビュー本文を入力してください");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       if (isEditMode && existingReview) {
         await updateReview({
