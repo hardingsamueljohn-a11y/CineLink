@@ -68,7 +68,7 @@ export default async function Header() {
             fontWeight: "bold",
           }}
         >
-          🎬 MovieApp
+          🎬 CineLink
         </Link>
 
         <nav>
