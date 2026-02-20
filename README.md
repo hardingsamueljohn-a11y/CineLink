@@ -2,7 +2,7 @@
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-View_App-black?style=for-the-badge&logo=vercel)](https://cinelink-share.vercel.app)
 
-**「あの時話したあの映画、なんだっけ？」をゼロにする。** 
+**「あの時話したあの映画、なんだっけ？」をゼロにする。**  
 信頼できる友人と映画でつながる、ソーシャル映画備忘録アプリ。
 
 ---
@@ -73,8 +73,7 @@ cd CineLink
 npm install
 ```
 
-3. **環境変数の設定**
-
+3. **環境変数の設定**  
 ルートディレクトリに `.env.local` ファイルを作成し、以下の内容を設定してください。
 
 ```env
