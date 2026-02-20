@@ -41,6 +41,57 @@ CineLinkは、不特定多数に向けた批評ではなく、**「信頼でき�
 
 ---
 
+## 🚀 セットアップ
+
+1. **リポジトリのクローン** 
+
+```bash
+git clone https://github.com/hardingsamueljohn-a11y/CineLink.git
+cd CineLink 
+```
+2. **パッケージのインストール**
+
+```bash
+npm install
+```
+
+3. **環境変数の設定**
+ルートディレクトリに `.env.local` ファイルを作成し、以下の内容を設定してください。
+
+```env 
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# TMDB API
+TMDB_API_KEY=your_tmdb_api_key
+```
+
+4. **ローカルサーバーの起動**
+
+```bash
+npm run dev
+```
+
+---
+
+## 🗄️ データベース設計
+
+本アプリを動作させるために必要なテーブル構成です。
+Supabase の SQL エディタなどで以下の構造を作成してください。
+
+| テーブル | 主要カラム | 役割 |
+| :--- | :--- | :--- |
+| **profiles** | `id` (PK), `username`, `avatar_url` | ユーザー情報 |
+| **movies** | `tmdb_id` (PK), `title`, `poster_path` | 映画データのキャッシュ |
+| **wishlists** | `id` (PK), `user_id`, `tmdb_id`, `status` | 観たいリスト |
+| **reviews** | `id` (PK), `user_id`, `tmdb_id`, `rating` | レビュー記録 |
+| **follows** | `follower_id` (PK), `following_id` (PK) | フォロー関係 ||
+
+※ 全てのテーブルに `created_at`、`reviews` テーブルに `updated_at` カラムを含みます。
+
+---
+
 ## 💎 こだわったポイント
 
 1. **UXの一貫性と使いやすさ**:
