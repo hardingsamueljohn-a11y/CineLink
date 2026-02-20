@@ -1,6 +1,9 @@
 # 🎬 CineLink（シネリンク）
 
-**「あの時話したあの映画、なんだっけ？」をゼロにする。** 信頼できる友人と映画でつながる、ソーシャル映画備忘録アプリ。
+[![Live Demo](https://img.shields.io/badge/Live_Demo-View_App-black?style=for-the-badge&logo=vercel)](https://cinelink-share.vercel.app)
+
+**「あの時話したあの映画、なんだっけ？」をゼロにする。** 
+信頼できる友人と映画でつながる、ソーシャル映画備忘録アプリ。
 
 ---
 
@@ -17,6 +20,18 @@ CineLinkは、不特定多数に向けた批評ではなく、**「信頼でき�
 
 ---
 
+## 🔑 デモアカウント
+
+アプリの動作をすぐに確認したい場合は、以下のテスト用アカウントをご利用ください。
+
+- **Email**: `demo@example.com`
+- **Password**: `password1234`
+
+> [!CAUTION]
+> デモアカウントでの投稿やフォローは自由にお試しいただけますが、他の利用者が不快に感じる内容の投稿はお控えください。
+
+---
+
 ## ✨ 主な機能
 
 - 🔍 **映画検索・詳細閲覧**: TMDB APIを活用した最新の映画情報の取得と表示。
@@ -30,11 +45,13 @@ CineLinkは、不特定多数に向けた批評ではなく、**「信頼でき�
 ## 🛠 使用技術
 
 ### Frontend
+
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Inline Styles (今後、保守性向上のため Tailwind CSS への移行を計画中)
 
 ### Backend / Infrastructure
+
 - **Database / Auth**: Supabase (PostgreSQL / Supabase Auth)
 - **API**: TMDB (The Movie Database) API
 - **Deployment**: Vercel
@@ -43,12 +60,13 @@ CineLinkは、不特定多数に向けた批評ではなく、**「信頼でき�
 
 ## 🚀 セットアップ
 
-1. **リポジトリのクローン** 
+1. **リポジトリのクローン**
 
 ```bash
 git clone https://github.com/hardingsamueljohn-a11y/CineLink.git
-cd CineLink 
+cd CineLink
 ```
+
 2. **パッケージのインストール**
 
 ```bash
@@ -59,7 +77,7 @@ npm install
 
 ルートディレクトリに `.env.local` ファイルを作成し、以下の内容を設定してください。
 
-```env 
+```env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -81,13 +99,13 @@ npm run dev
 本アプリを動作させるために必要なテーブル構成です。
 Supabase の SQL エディタなどで以下の構造を作成してください。
 
-| テーブル | 主要カラム | 役割 |
-| :--- | :--- | :--- |
-| **profiles** | `id` (PK), `username`, `avatar_url` | ユーザー情報 |
-| **movies** | `tmdb_id` (PK), `title`, `poster_path` | 映画データのキャッシュ |
-| **wishlists** | `id` (PK), `user_id`, `tmdb_id`, `status` | 観たいリスト |
-| **reviews** | `id` (PK), `user_id`, `tmdb_id`, `rating` | レビュー記録 |
-| **follows** | `follower_id` (PK), `following_id` (PK) | フォロー関係 ||
+| テーブル      | 主要カラム                                | 役割                   |
+| :------------ | :---------------------------------------- | :--------------------- |
+| **profiles**  | `id` (PK), `username`, `avatar_url`       | ユーザー情報           |
+| **movies**    | `tmdb_id` (PK), `title`, `poster_path`    | 映画データのキャッシュ |
+| **wishlists** | `id` (PK), `user_id`, `tmdb_id`, `status` | 観たいリスト           |
+| **reviews**   | `id` (PK), `user_id`, `tmdb_id`, `rating` | レビュー記録           |
+| **follows**   | `follower_id` (PK), `following_id` (PK)   | フォロー関係           |
 
 ※ 全てのテーブルに `created_at`、`reviews` テーブルに `updated_at` カラムを含みます。
 
@@ -117,4 +135,5 @@ Supabase の SQL エディタなどで以下の構造を作成してください
 ---
 
 ## 👨‍💻 開発の背景
+
 「映画好きの友人と話す時間は楽しいけれど、おすすめされた作品をメモしきれず、観る機会を逃してしまう」という自身の課題からこのアプリは生まれました。メモ帳よりも視覚的に楽しく、SNSよりもプライベートな、ちょうどいい距離感の「映画の置き場所」を目指しています。
