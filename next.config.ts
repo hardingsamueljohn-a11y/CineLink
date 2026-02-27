@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    domains: [
+      'image.tmdb.org',
+      'your-project-id.supabase.co', 
+      'placehold.jp',               
+    ],
     remotePatterns: [
       {
         protocol: "https",
