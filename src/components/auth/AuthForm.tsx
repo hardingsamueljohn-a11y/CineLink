@@ -50,6 +50,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        // 本番環境でのlocalhost遷移バグを防ぐため
+        // リダイレクト先を現在の環境のURLに基づいて動的に指定
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
 
       if (error) throw error;
@@ -74,6 +79,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
         throw new Error(`profiles作成に失敗: ${profileError.message}`);
       }
 
+      // サインアップ後はメール認証を待つ必要があるため、
+      // ユーザーに確認を促すメッセージなどを出すのが一般的ですが、
+      // 既存の挙動（/homeへのプッシュ）を維持します。
       router.push("/home");
       router.refresh();
     } catch (e) {
