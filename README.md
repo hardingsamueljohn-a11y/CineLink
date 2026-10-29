@@ -46,7 +46,7 @@ CineLinkは、不特定多数に向けた批評ではなく、**「信頼でき�
 
 ### Frontend
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16.4.3 (App Router)
 - **Language**: TypeScript
 - **Styling**: Inline Styles (今後、保守性向上のため Tailwind CSS への移行を計画中)
 
@@ -80,10 +80,14 @@ npm install
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SECRET_KEY=your_supabase_secret_key
 
 # TMDB API
 TMDB_API_KEY=your_tmdb_api_key
 ```
+
+※ `SUPABASE_SECRET_KEY`はサーバー専用の秘密鍵です。`NEXT_PUBLIC_`を付けず、実際の値は公開しないでください。
+※ 新しいSupabaseプロジェクトでは、アプリ用テーブルの作成とRLS・Storageポリシーの設定も必要です。
 
 4. **ローカルサーバーの起動**
 
@@ -95,8 +99,7 @@ npm run dev
 
 ## 🗄️ データベース設計
 
-本アプリを動作させるために必要なテーブル構成です。
-Supabase の SQL エディタなどで以下の構造を作成してください。
+CineLinkで使用している主要5テーブルの構成とリレーションを示しています。
 
 | テーブル      | 主要カラム                                | 役割                   |
 | :------------ | :---------------------------------------- | :--------------------- |
@@ -107,6 +110,61 @@ Supabase の SQL エディタなどで以下の構造を作成してください
 | **follows**   | `follower_id` (PK), `following_id` (PK)   | フォロー関係           |
 
 ※ 全てのテーブルに `created_at`、`reviews` テーブルに `updated_at` カラムを含みます。
+
+---
+
+### ER図
+
+主要5テーブルの関係を示しています。`PK`は主キー、`FK`は外部キー、`UK`はUNIQUE制約です。
+
+```mermaid
+erDiagram
+    profiles {
+        uuid id PK
+        text username UK
+        text avatar_url
+        text bio
+    }
+
+    movies {
+        integer tmdb_id PK
+        text title
+        text poster_path
+    }
+
+    reviews {
+        uuid id PK
+        uuid user_id FK
+        integer tmdb_id FK
+        integer rating
+        text content
+        boolean is_spoiler
+    }
+
+    wishlists {
+        uuid id PK
+        uuid user_id FK
+        integer tmdb_id FK
+        text status
+    }
+
+    follows {
+        uuid follower_id PK, FK
+        uuid following_id PK, FK
+    }
+
+    profiles ||..o{ reviews : "レビューを投稿"
+    movies ||..o{ reviews : "レビューの対象"
+    profiles ||..o{ wishlists : "観たい映画を登録"
+    movies ||..o{ wishlists : "観たい映画の対象"
+    profiles ||--o{ follows : "フォローする側"
+    profiles ||--o{ follows : "フォローされる側"
+```
+
+- `movies.tmdb_id`はTMDBの映画IDを使った主キーです。
+- `reviews`と`wishlists`には、それぞれ`UNIQUE (user_id, tmdb_id)`があり、同じユーザー・映画の組み合わせの重複を防ぎます。
+- `follows`は`(follower_id, following_id)`を複合主キーとし、両カラムが`profiles.id`を参照します。ユーザー間の一方向フォローを2本のリレーションで表現しています。
+- 図では日時カラムを省略しています。全5テーブルに`created_at`、`reviews`には`updated_at`があります。
 
 ---
 
