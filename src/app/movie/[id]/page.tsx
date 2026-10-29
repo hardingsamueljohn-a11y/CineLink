@@ -13,6 +13,7 @@ import HomeBackButton from "@/components/movie/HomeBackButton";
 import { Review } from "@/types/review";
 import { Profile } from "@/types/profile";
 import ReviewList from "@/components/review/ReviewList";
+import { isTmdbId } from "@/lib/security/validation";
 
 type MovieDetailPageProps = {
   params: Promise<{
@@ -29,7 +30,7 @@ interface DbReviewResponse {
   content: string;
   is_spoiler: boolean;
   created_at: string;
-  profiles: Profile | Profile[] | null;
+  profiles: Pick<Profile, "id" | "username" | "avatar_url" | "bio"> | Pick<Profile, "id" | "username" | "avatar_url" | "bio">[] | null;
 }
 
 export default async function MovieDetailPage({
@@ -38,7 +39,7 @@ export default async function MovieDetailPage({
   const { id } = await params;
   const tmdbId = Number(id);
 
-  if (Number.isNaN(tmdbId)) {
+  if (!isTmdbId(tmdbId)) {
     return (
       <main style={{ padding: "24px" }}>
         <p>不正な映画IDです。</p>
@@ -65,50 +66,51 @@ export default async function MovieDetailPage({
   } = await supabase.auth.getUser();
 
   // --- レビュー一覧 ---
-  const { data: reviewsData, error: reviewsError } = await supabase
-    .from("reviews")
-    .select(
-      `
-      id,
-      user_id,
-      tmdb_id,
-      rating,
-      content,
-      is_spoiler,
-      created_at,
-      profiles (
+  let reviews: Review[] = [];
+  if (user) {
+    const { data: reviewsData, error: reviewsError } = await supabase
+      .from("reviews")
+      .select(
+        `
         id,
-        username,
-        avatar_url,
-        bio
+        user_id,
+        tmdb_id,
+        rating,
+        content,
+        is_spoiler,
+        created_at,
+        profiles (
+          id,
+          username,
+          avatar_url,
+          bio
+        )
+      `,
       )
-    `,
-    )
-    .eq("tmdb_id", tmdbId)
-    .order("created_at", { ascending: false });
+      .eq("tmdb_id", tmdbId)
+      .order("created_at", { ascending: false });
 
-  const rawReviews = (reviewsData as unknown as DbReviewResponse[]) || [];
+    const rawReviews = (reviewsData as unknown as DbReviewResponse[]) || [];
+    if (!reviewsError) {
+      reviews = rawReviews.map((r) => {
+        const profileData = Array.isArray(r.profiles)
+          ? r.profiles[0]
+          : r.profiles;
 
-  const reviews: Review[] =
-    !reviewsError && rawReviews.length > 0
-      ? rawReviews.map((r) => {
-          const profileData = Array.isArray(r.profiles)
-            ? r.profiles[0]
-            : r.profiles;
-
-          return {
-            id: r.id,
-            userId: r.user_id,
-            tmdbId: r.tmdb_id,
-            rating: r.rating,
-            content: r.content,
-            isSpoiler: r.is_spoiler,
-            createdAt: r.created_at,
-            profiles: profileData ?? undefined,
-            movieTitle: movie.title,
-          };
-        })
-      : [];
+        return {
+          id: r.id,
+          userId: r.user_id,
+          tmdbId: r.tmdb_id,
+          rating: r.rating,
+          content: r.content,
+          isSpoiler: r.is_spoiler,
+          createdAt: r.created_at,
+          profiles: profileData ?? undefined,
+          movieTitle: movie.title,
+        };
+      });
+    }
+  }
 
   return (
     <main style={{ padding: "24px", maxWidth: "1000px", margin: "0 auto" }}>
@@ -223,11 +225,15 @@ export default async function MovieDetailPage({
         <h2 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "20px" }}>
           レビュー一覧
         </h2>
-        <ReviewList 
-          reviews={reviews} 
-          tmdbId={tmdbId} 
-          currentUserId={user?.id} 
-        />
+        {user ? (
+          <ReviewList
+            reviews={reviews}
+            tmdbId={tmdbId}
+            currentUserId={user.id}
+          />
+        ) : (
+          <p style={{ color: "#666" }}>レビューを閲覧するにはログインしてください。</p>
+        )}
       </section>
 
       {/* =========================

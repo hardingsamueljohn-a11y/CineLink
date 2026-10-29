@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
+import { safeRedirectPath } from "@/lib/security/urls";
 
 /**
  * 認証メールのリンククリック時に呼び出されるエンドポイント
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   
   // 認証後に移動したいページ（デフォルトは /home）
-  const next = searchParams.get("next") ?? "/home";
+  const next = safeRedirectPath(searchParams.get("next"), origin);
 
   if (code) {
     // 既存の lib/supabase/server.ts を使用してサーバー用クライアントを取得
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
     
     if (!error) {
       // 成功したら、本番ドメイン（origin）＋移動先（next）へリダイレクト
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(new URL(next, origin));
     }
   }
 

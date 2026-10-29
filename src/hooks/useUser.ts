@@ -25,7 +25,7 @@ export const useUser = () => {
         // 2. profilesテーブルから詳細情報を取得
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, username, avatar_url, bio')
           .eq('id', user.id)
           .single();
 

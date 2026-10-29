@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react"; 
+import { useState, useRef, useEffect } from "react"; 
 import { updateProfile } from "@/actions/profile";
 import { supabase } from "@/lib/supabase/client"; 
+import { safeAvatarUrl } from "@/lib/security/urls";
+import { MAX_BIO_LENGTH, MAX_USERNAME_LENGTH } from "@/lib/security/validation";
+
+const AVATAR_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "image/avif": "avif" };
 
 type EditProfileModalProps = {
   profile: {
@@ -27,8 +31,9 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
   const [loading, setLoading] = useState(false);
 
   // 画像プレビュー・アップロード用の状態管理
-  const [previewUrl, setPreviewUrl] = useState<string | null>(profile.avatar_url);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(() => safeAvatarUrl(profile.avatar_url, process.env.NEXT_PUBLIC_SUPABASE_URL));
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  useEffect(() => () => { if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
   /**
    * 画像が選択された時の処理
@@ -36,6 +41,11 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!AVATAR_TYPES[file.type] || file.size === 0 || file.size > 5 * 1024 * 1024) {
+        e.target.value = "";
+        alert("5MiB以内のJPEG・PNG・WebP・GIF・AVIF画像を選択してください");
+        return;
+      }
       setSelectedFile(file);
       // 表示用のプレビューURLを作成
       setPreviewUrl(URL.createObjectURL(file));
@@ -50,18 +60,21 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
     setLoading(true);
 
     try {
-      let finalAvatarUrl = profile.avatar_url;
+      // Preserve unchanged legacy data; send a URL only when a new image is uploaded.
+      let finalAvatarUrl: string | undefined;
 
       // 新しい画像が選択されている場合はStorageへアップロード
       if (selectedFile) {
-        const fileExt = selectedFile.name.split(".").pop();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user || user.id !== profile.id) throw new Error("ログインが必要です");
+        const fileExt = AVATAR_TYPES[selectedFile.type];
         // ファイル名を重複させないためのランダムな名前
-        const fileName = `${profile.id}-${Math.random()}.${fileExt}`;
-        const filePath = `${profile.id}/${fileName}`;
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from("avatars")
-          .upload(filePath, selectedFile, { upsert: true });
+          .upload(filePath, selectedFile, { upsert: false, contentType: selectedFile.type });
 
         if (uploadError) throw uploadError;
 
@@ -75,7 +88,6 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
 
       // サーバーアクションを呼び出してDBを更新
       await updateProfile({
-        userId: profile.id,
         username,
         bio,
         avatarUrl: finalAvatarUrl,
@@ -163,7 +175,7 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
               style={{ display: "none" }}
             />
           </div>
@@ -178,6 +190,7 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              maxLength={MAX_USERNAME_LENGTH}
               style={{ 
                 width: "100%", 
                 padding: "12px", 
@@ -199,6 +212,7 @@ export default function EditProfileModal({ profile, onClose }: EditProfileModalP
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={4}
+              maxLength={MAX_BIO_LENGTH}
               style={{ 
                 width: "100%", 
                 padding: "12px", 

@@ -1,4 +1,6 @@
+import "server-only";
 import { Movie } from "@/types/movie";
+import { isTmdbId, MAX_SEARCH_LENGTH } from "@/lib/security/validation";
 
 /**
  * TMDB APIからの生のレスポンス型定義
@@ -78,15 +80,23 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
  * @param data TMDB APIから取得した生の映画データ
  * @returns アプリケーション共通の Movie オブジェクト
  */
-const mapToMovie = (data: TmdbMovieResponse): Movie => ({
+const imagePath = (value: unknown): string | null =>
+  typeof value === "string" && /^\/[a-z0-9_-]+\.(?:jpg|jpeg|png|webp)$/i.test(value) ? value : null;
+
+const mapToMovie = (data: TmdbMovieResponse): Movie => {
+  if (!data || !isTmdbId(data.id) || typeof data.title !== "string" || !data.title.trim()) {
+    throw new Error("Invalid external movie data");
+  }
+  return {
   id: data.id,
   title: data.title,
-  posterPath: data.poster_path,
-  backdropPath: data.backdrop_path,
-  overview: data.overview,
-  releaseDate: data.release_date,
-  voteAverage: data.vote_average,
-});
+  posterPath: imagePath(data.poster_path),
+  backdropPath: imagePath(data.backdrop_path),
+  overview: typeof data.overview === "string" ? data.overview : "",
+  releaseDate: typeof data.release_date === "string" ? data.release_date : "",
+  voteAverage: Number.isFinite(data.vote_average) ? data.vote_average : 0,
+  };
+};
 
 /**
  * APIキーの検証と取得を行う内部関数
@@ -104,7 +114,7 @@ const getApiKey = (): string => {
  * @param query 検索クエリ文字列
  */
 export const searchMovies = async (query: string): Promise<Movie[]> => {
-  if (!query.trim()) return [];
+  if (typeof query !== "string" || query.length > MAX_SEARCH_LENGTH || !query.trim()) return [];
 
   const url = new URL(`${TMDB_BASE_URL}/search/movie`);
   url.searchParams.set("api_key", getApiKey());
@@ -130,6 +140,7 @@ export const searchMovies = async (query: string): Promise<Movie[]> => {
  * @param tmdbId TMDB ID
  */
 export const getMovieDetail = async (tmdbId: number): Promise<Movie> => {
+  if (!isTmdbId(tmdbId)) throw new Error("Invalid movie ID");
   const url = new URL(`${TMDB_BASE_URL}/movie/${tmdbId}`);
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("language", "ja-JP");
@@ -235,6 +246,7 @@ export const getHeroMovies = async (): Promise<Movie[]> => {
 export const getMovieCredits = async (
   tmdbId: number
 ): Promise<{ cast: Cast[]; director: Crew | null }> => {
+  if (!isTmdbId(tmdbId)) throw new Error("Invalid movie ID");
   const url = new URL(`${TMDB_BASE_URL}/movie/${tmdbId}/credits`);
   url.searchParams.set("api_key", getApiKey());
   url.searchParams.set("language", "ja-JP");
@@ -252,7 +264,7 @@ export const getMovieCredits = async (
     id: c.id,
     name: c.name,
     character: c.character,
-    profilePath: c.profile_path,
+    profilePath: imagePath(c.profile_path),
   }));
 
   const directorData = data.crew.find((c) => c.job === "Director");
@@ -268,6 +280,7 @@ export const getMovieCredits = async (
  * @param tmdbId TMDB ID
  */
 export const getMovieVideos = async (tmdbId: number): Promise<Video[]> => {
+  if (!isTmdbId(tmdbId)) throw new Error("Invalid movie ID");
   const url = new URL(`${TMDB_BASE_URL}/movie/${tmdbId}/videos`);
   url.searchParams.set("api_key", getApiKey());
   // 動画は日本語で見つからないことが多いため、まずは言語設定なしで取得を試みる
@@ -283,7 +296,7 @@ export const getMovieVideos = async (tmdbId: number): Promise<Video[]> => {
   
   // YouTubeのTrailer（予告編）を優先的に返す
   return data.results
-    .filter((v) => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"))
+    .filter((v) => v.site === "YouTube" && typeof v.key === "string" && /^[a-zA-Z0-9_-]{11}$/.test(v.key) && (v.type === "Trailer" || v.type === "Teaser"))
     .map((v) => ({
       key: v.key,
       site: v.site,

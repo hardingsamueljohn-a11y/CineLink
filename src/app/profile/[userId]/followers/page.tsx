@@ -3,6 +3,8 @@ import UserList from "@/components/profile/UserList";
 import Link from "next/link"; 
 import { SearchUser, Profile } from "@/types/profile";
 import ProfileBackButton from "@/components/profile/ProfileBackButton";
+import { redirect, notFound } from "next/navigation";
+import { isUuid } from "@/lib/security/validation";
 
 type FollowersPageProps = {
   params: Promise<{
@@ -16,6 +18,12 @@ type FollowersPageProps = {
 export default async function FollowersPage({ params }: FollowersPageProps) {
   const { userId } = await params;
   const supabase = await supabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+  if (!isUuid(userId)) notFound();
 
   // プロフィール情報の取得
   const { data: profile } = await supabase

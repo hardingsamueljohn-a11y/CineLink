@@ -5,6 +5,7 @@ import Link from "next/link";
 import FollowButton from "@/components/profile/FollowButton";
 import EditProfileModal from "@/components/profile/EditProfileModal";
 import { Profile } from "@/types/profile";
+import { safeAvatarUrl } from "@/lib/security/urls";
 
 type ProfileHeaderProps = {
   userId: string;
@@ -29,6 +30,7 @@ export default function ProfileHeader({
   currentUserId, // 自分のID
   initialIsFollowing,
 }: ProfileHeaderProps) {
+  const displayAvatarUrl = safeAvatarUrl(avatarUrl, process.env.NEXT_PUBLIC_SUPABASE_URL);
   const [isModalOpen, setIsModalOpen] = useState(false); // モーダル状態管理
 
   return (
@@ -58,10 +60,10 @@ export default function ProfileHeader({
             border: "1px solid #eee",
           }}
         >
-          {avatarUrl ? (
+          {displayAvatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={avatarUrl}
+              src={displayAvatarUrl}
               alt="avatar"
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
@@ -174,7 +176,6 @@ export default function ProfileHeader({
         {!isMyProfile && currentUserId && (
           <div style={{ marginLeft: "auto", alignSelf: "flex-start" }}>
             <FollowButton
-              followerId={currentUserId}
               followingId={userId}
               initialIsFollowing={initialIsFollowing}
             />

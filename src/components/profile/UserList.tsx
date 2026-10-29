@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { SearchUser } from "@/types/profile";
+import { safeAvatarUrl } from "@/lib/security/urls";
 
 type UserListProps = {
   users: SearchUser[];
@@ -12,6 +13,7 @@ type UserListProps = {
  * フォロー・フォロワーなどのユーザー一覧を表示する共通コンポーネント
  */
 export default function UserList({ users, emptyMessage }: UserListProps) {
+  const displayUsers = users.map((user) => ({ ...user, avatar_url: safeAvatarUrl(user.avatar_url, process.env.NEXT_PUBLIC_SUPABASE_URL) }));
   // ユーザーがいない場合の表示
   if (users.length === 0) {
     return (
@@ -23,7 +25,7 @@ export default function UserList({ users, emptyMessage }: UserListProps) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {users.map((user) => (
+      {displayUsers.map((user) => (
         <Link
           key={user.id}
           href={`/profile/${user.id}`}

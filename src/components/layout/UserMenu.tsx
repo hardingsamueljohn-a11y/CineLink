@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { logout } from "@/actions/auth";
 import { User } from "lucide-react";
+import { safeAvatarUrl } from "@/lib/security/urls";
 
 type UserMenuProps = {
   userId: string;
@@ -12,6 +13,7 @@ type UserMenuProps = {
 };
 
 export default function UserMenu({ userId, username, avatarUrl }: UserMenuProps) {
+  const displayAvatarUrl = safeAvatarUrl(avatarUrl, process.env.NEXT_PUBLIC_SUPABASE_URL);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -43,10 +45,10 @@ export default function UserMenu({ userId, username, avatarUrl }: UserMenuProps)
           padding: 0,
         }}
       >
-        {avatarUrl ? (
+        {displayAvatarUrl ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img 
-            src={avatarUrl} 
+            src={displayAvatarUrl} 
             alt={username} 
             style={{ width: "100%", height: "100%", objectFit: "cover" }} 
           />

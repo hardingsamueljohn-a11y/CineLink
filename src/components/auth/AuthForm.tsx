@@ -17,6 +17,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const isLogin = mode === "login";
 
@@ -24,6 +25,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage("");
+    setSuccessMessage("");
 
     try {
       if (!email.trim() || !password.trim()) {
@@ -44,9 +46,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
-      // ---------------------------
-      // signup（ここが今回の本題）
-      // ---------------------------
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -59,33 +58,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
       if (error) throw error;
 
-      const user = data.user;
-      if (!user) {
-        throw new Error("ユーザー作成に失敗しました");
+      if (!data.session) {
+        setSuccessMessage("確認メールを送信しました。メール内のリンクから登録を完了してください。");
+        return;
       }
 
-      // ✅ profiles に初期レコード作成（外部キー制約対策）
-      // usernameは仮で emailの@前を入れておく（後で編集できる想定）
-      const defaultUsername = email.split("@")[0];
-
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: user.id,
-        username: defaultUsername,
-        avatar_url: null,
-        bio: null,
-      });
-
-      if (profileError) {
-        throw new Error(`profiles作成に失敗: ${profileError.message}`);
-      }
-
-      // サインアップ後はメール認証を待つ必要があるため、
-      // ユーザーに確認を促すメッセージなどを出すのが一般的ですが、
-      // 既存の挙動（/homeへのプッシュ）を維持します。
+      // profiles は Auth のDB triggerで作成する。認証前のanon INSERTは行わない。
       router.push("/home");
       router.refresh();
-    } catch (e) {
-      setErrorMessage(e instanceof Error ? e.message : "エラーが発生しました");
+    } catch {
+      setErrorMessage(isLogin ? "ログインできませんでした。入力内容を確認してください。" : "登録できませんでした。入力内容を確認して再度お試しください。");
     } finally {
       setIsLoading(false);
     }
@@ -115,6 +97,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
             </label>
             <input
               type="email"
+              required
+              maxLength={254}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="example@email.com"
@@ -135,6 +119,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
             </label>
             <input
               type="password"
+              required
+              maxLength={1024}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="password"
@@ -174,6 +160,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               {errorMessage}
             </p>
           ) : null}
+          {successMessage ? <p role="status" style={{ fontSize: "13px" }}>{successMessage}</p> : null}
         </div>
       </form>
 

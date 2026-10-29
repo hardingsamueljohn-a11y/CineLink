@@ -5,6 +5,7 @@ import { ActivityItem } from "@/types/activity";
 import Link from "next/link";
 import Image from "next/image";
 import StarRating from "@/components/ui/StarRating";
+import { safeAvatarUrl } from "@/lib/security/urls";
 
 type ActivityTimelineProps = {
   initialActivities: ActivityItem[];
@@ -16,7 +17,7 @@ export default function ActivityTimeline({
   const [displayCount, setDisplayCount] = useState(5);
 
   // 表示する分だけ切り出し
-  const visibleActivities = initialActivities.slice(0, displayCount);
+  const visibleActivities = initialActivities.slice(0, displayCount).map((item) => ({ ...item, avatarUrl: safeAvatarUrl(item.avatarUrl, process.env.NEXT_PUBLIC_SUPABASE_URL) }));
   const hasMore = initialActivities.length > displayCount;
 
   return (

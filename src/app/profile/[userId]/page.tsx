@@ -6,6 +6,8 @@ import { Profile } from "@/types/profile";
 import { Review } from "@/types/review";
 import { searchUsers } from "@/actions/profile";
 import Link from "next/link";
+import { redirect, notFound } from "next/navigation";
+import { isUuid } from "@/lib/security/validation";
 
 type ProfilePageProps = {
   params: Promise<{
@@ -30,6 +32,11 @@ export default async function ProfilePage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+  if (!isUuid(userId)) notFound();
 
   // --- ユーザー検索の実行 (自分のプロフィールの時のみ有効) ---
   const foundUsers = user_q ? await searchUsers(user_q) : [];
@@ -68,24 +75,24 @@ export default async function ProfilePage({
   // --- フォロー数 ---
   const { count: followingCount } = await supabase
     .from("follows")
-    .select("*", { count: "exact", head: true })
+    .select("following_id", { count: "exact", head: true })
     .eq("follower_id", userId);
 
   // --- フォロワー数 ---
   const { count: followerCount } = await supabase
     .from("follows")
-    .select("*", { count: "exact", head: true })
+    .select("follower_id", { count: "exact", head: true })
     .eq("following_id", userId);
 
   // --- 自分のプロフィールか ---
-  const isMyProfile = user ? user.id === userId : false;
+  const isMyProfile = user.id === userId;
 
   // --- フォロー状態の取得 ---
   let isFollowing = false;
   if (user && !isMyProfile) {
     const { data: followData } = await supabase
       .from("follows")
-      .select("*")
+    .select("follower_id")
       .eq("follower_id", user.id)
       .eq("following_id", userId)
       .maybeSingle();

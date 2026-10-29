@@ -129,6 +129,7 @@ export default function ReviewForm({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={8}
+              maxLength={1000}
               placeholder="感想を書いてください"
               style={{
                 width: "100%",

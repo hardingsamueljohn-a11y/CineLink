@@ -2,9 +2,11 @@
 
 import { supabaseServer } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { getMovieDetail } from "@/lib/tmdb/api";
+import { ensureMovieRecord } from "@/lib/movies/ensure-movie-record";
+import { isTmdbId } from "@/lib/security/validation";
 
 export const addToWishlist = async (tmdbId: number) => {
+  if (!isTmdbId(tmdbId)) throw new Error("不正な映画IDです");
   const supabase = await supabaseServer();
 
   const {
@@ -16,33 +18,9 @@ export const addToWishlist = async (tmdbId: number) => {
     throw new Error("ログインが必要です");
   }
 
-  // ✅ 1) まず movies テーブルに存在するか確認
-  const { data: existingMovie, error: movieSelectError } = await supabase
-    .from("movies")
-    .select("tmdb_id")
-    .eq("tmdb_id", tmdbId)
-    .maybeSingle();
+  await ensureMovieRecord(supabase, tmdbId);
 
-  if (movieSelectError) {
-    throw new Error(movieSelectError.message);
-  }
-
-  // ✅ 2) 無ければ TMDB から情報を取って movies に保存
-  if (!existingMovie) {
-    const movieDetail = await getMovieDetail(tmdbId);
-
-    const { error: movieInsertError } = await supabase.from("movies").upsert({
-      tmdb_id: movieDetail.id,
-      title: movieDetail.title,
-      poster_path: movieDetail.posterPath,
-    });
-
-    if (movieInsertError) {
-      throw new Error(`movies保存に失敗: ${movieInsertError.message}`);
-    }
-  }
-
-  // ✅ 3) wishlists に追加（外部キーを満たすので成功する）
+  // wishlists は本人のセッションで追加し、RLSでも所有者を検証する。
   const { error } = await supabase.from("wishlists").insert({
     user_id: user.id,
     tmdb_id: tmdbId,
@@ -50,13 +28,14 @@ export const addToWishlist = async (tmdbId: number) => {
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error("ウィッシュリストに追加できませんでした");
   }
 
   revalidatePath(`/movie/${tmdbId}`);
 };
 
 export const removeFromWishlist = async (tmdbId: number) => {
+  if (!isTmdbId(tmdbId)) throw new Error("不正な映画IDです");
   const supabase = await supabaseServer();
 
   const {
@@ -75,7 +54,7 @@ export const removeFromWishlist = async (tmdbId: number) => {
     .eq("tmdb_id", tmdbId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error("ウィッシュリストから削除できませんでした");
   }
 
   revalidatePath(`/movie/${tmdbId}`);

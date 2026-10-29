@@ -5,56 +5,68 @@ import { followUser, unfollowUser } from "@/actions/follows";
 import { FollowState } from "@/types/profile";
 
 type FollowButtonProps = {
-  followerId: string; // 自分のID
   followingId: string; // 相手のID
   initialIsFollowing: FollowState["isFollowing"];
 };
 
 export default function FollowButton({
-  followerId,
   followingId,
   initialIsFollowing,
 }: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // フォロー・フォロー解除の切り替え処理
   const handleFollow = async () => {
     if (loading) return;
     setLoading(true);
+    setError(null);
 
-    if (isFollowing) {
-      // フォロー解除
-      await unfollowUser(followerId, followingId);
-      setIsFollowing(false);
-    } else {
-      // フォロー実行
-      await followUser(followerId, followingId);
-      setIsFollowing(true);
+    try {
+      const result = isFollowing
+        ? await unfollowUser(followingId)
+        : await followUser(followingId);
+
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      setIsFollowing(!isFollowing);
+    } catch {
+      setError("フォロー状態を更新できませんでした");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <button
-      onClick={handleFollow}
-      disabled={loading}
-      style={{
-        padding: "8px 16px",
-        borderRadius: "20px",
-        fontWeight: "bold",
-        cursor: loading ? "not-allowed" : "pointer",
-        backgroundColor: isFollowing ? "#fff" : "#000",
-        color: isFollowing ? "#000" : "#fff",
-        border: "1px solid #000",
-      }}
-    >
-      {loading
-        ? "読み込み中..."
-        : isFollowing
-          ? "フォロー解除"
-          : "フォローする"}
-    </button>
+    <div>
+      <button
+        onClick={handleFollow}
+        disabled={loading}
+        style={{
+          padding: "8px 16px",
+          borderRadius: "20px",
+          fontWeight: "bold",
+          cursor: loading ? "not-allowed" : "pointer",
+          backgroundColor: isFollowing ? "#fff" : "#000",
+          color: isFollowing ? "#000" : "#fff",
+          border: "1px solid #000",
+        }}
+      >
+        {loading
+          ? "読み込み中..."
+          : isFollowing
+            ? "フォロー解除"
+            : "フォローする"}
+      </button>
+      {error && (
+        <p role="alert" style={{ marginTop: "8px", color: "crimson", fontSize: "12px" }}>
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
