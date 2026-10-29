@@ -2,43 +2,67 @@
 
 import { supabaseServer } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { isUuid } from "@/lib/security/validation";
 
-//ユーザーをフォローする
- 
-export async function followUser(followerId: string, followingId: string) {
+type FollowActionResult = { success: true } | { success: false; error: string };
+
+async function getAuthenticatedUser() {
   const supabase = await supabaseServer();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-  const { error } = await supabase
-    .from("follows")
-    .insert([{ follower_id: followerId, following_id: followingId }]);
-
-  if (error) {
-    console.error("Follow Error:", error.message);
-    return { success: false, error: error.message };
+  if (error || !user) {
+    throw new Error("ログインが必要です");
   }
 
-  // プロフィール画面の数値を即時反映させる
+  return { supabase, user };
+}
+
+export async function followUser(followingId: string): Promise<FollowActionResult> {
+  if (!isUuid(followingId)) {
+    return { success: false, error: "対象ユーザーが不正です" };
+  }
+  followingId = followingId.toLowerCase();
+
+  const { supabase, user } = await getAuthenticatedUser();
+  if (followingId === user.id) {
+    return { success: false, error: "自分自身はフォローできません" };
+  }
+
+  const { error } = await supabase.from("follows").insert({
+    follower_id: user.id,
+    following_id: followingId,
+  });
+
+  if (error) {
+    console.error("Follow failed:", error.code);
+    return { success: false, error: "フォローできませんでした" };
+  }
+
   revalidatePath(`/profile/${followingId}`);
   return { success: true };
 }
 
-//フォローを解除する
- 
-export async function unfollowUser(followerId: string, followingId: string) {
-  const supabase = await supabaseServer();
+export async function unfollowUser(followingId: string): Promise<FollowActionResult> {
+  if (!isUuid(followingId)) {
+    return { success: false, error: "対象ユーザーが不正です" };
+  }
+  followingId = followingId.toLowerCase();
 
+  const { supabase, user } = await getAuthenticatedUser();
   const { error } = await supabase
     .from("follows")
     .delete()
-    .eq("follower_id", followerId)
+    .eq("follower_id", user.id)
     .eq("following_id", followingId);
 
   if (error) {
-    console.error("Unfollow Error:", error.message);
-    return { success: false, error: error.message };
+    console.error("Unfollow failed:", error.code);
+    return { success: false, error: "フォロー解除できませんでした" };
   }
 
-  // 表示を更新
   revalidatePath(`/profile/${followingId}`);
   return { success: true };
 }

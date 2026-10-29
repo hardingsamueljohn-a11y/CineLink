@@ -2,69 +2,95 @@
 
 import { supabaseServer } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { Profile } from "@/types/profile";
+import { isRecord, MAX_BIO_LENGTH, MAX_USERNAME_LENGTH } from "@/lib/security/validation";
+import { safeAvatarUrl } from "@/lib/security/urls";
 
-/**
- * ユーザー名でプロフィールを検索する（ilikeによる部分一致）
- */
+/** Search is available only to signed-in users under the chosen visibility policy. */
 export async function searchUsers(query: string) {
-  // 空文字の場合は空配列を返す
-  if (!query.trim()) return [];
+  if (typeof query !== "string" || query.length > 80) return [];
+  const normalizedQuery = query.trim();
+  if (!normalizedQuery) return [];
 
   const supabase = await supabaseServer();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-  // usernameに対して部分一致（%...%）かつ大文字小文字を区別せず（ilike）検索
+  if (authError || !user) return [];
+
+  // Escape LIKE metacharacters so input is treated as literal text.
+  const pattern = normalizedQuery.replace(/[\\%_]/g, "\\$&");
   const { data, error } = await supabase
     .from("profiles")
     .select("id, username")
-    .ilike("username", `%${query}%`)
-    .limit(10); // 最大10件程度に制限
+    .ilike("username", `%${pattern}%`)
+    .limit(10);
 
   if (error) {
-    console.error("User search error:", error.message);
+    console.error("User search failed:", error.code);
     return [];
   }
 
   return data ?? [];
 }
 
-/**
- * プロフィール情報を更新する
- */
-export async function updateProfile({
-  userId,
-  username,
-  bio,
-  avatarUrl, 
-}: {
-  userId: string;
+/** Update only the caller's editable profile fields; the user ID is session-derived. */
+export async function updateProfile(input: {
   username: string;
   bio: string;
-  avatarUrl?: string | null; 
+  avatarUrl?: string | null;
 }) {
+  if (!isRecord(input) || typeof input.username !== "string" || typeof input.bio !== "string") {
+    throw new Error("プロフィールの入力が不正です");
+  }
+  const { username, bio, avatarUrl } = input;
+  if (username.length > MAX_USERNAME_LENGTH || bio.length > MAX_BIO_LENGTH) {
+    throw new Error("ユーザー名は80文字、自己紹介は1000文字以内にしてください");
+  }
   const supabase = await supabaseServer();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-  // 更新する値をオブジェクトとして定義（Partial<Profile>を使うことで安全に）
-  const updateData: Partial<Profile> = {
-    username,
-    bio,
+  if (authError || !user) {
+    throw new Error("ログインが必要です");
+  }
+
+  const updateData: {
+    username: string;
+    bio: string;
+    avatar_url?: string | null;
+  } = {
+    username: username.trim(),
+    bio: bio.trim(),
   };
 
-  // avatarUrlが渡された場合のみ更新対象に含める
   if (avatarUrl !== undefined) {
-    updateData.avatar_url = avatarUrl;
+    const safeUrl = safeAvatarUrl(avatarUrl, process.env.NEXT_PUBLIC_SUPABASE_URL, user.id);
+    if (avatarUrl !== null && !safeUrl) throw new Error("プロフィール画像のURLが不正です");
+    updateData.avatar_url = safeUrl;
   }
 
-  const { error } = await supabase
+  if (!updateData.username) {
+    throw new Error("ユーザー名を入力してください");
+  }
+
+  const { data: updatedProfile, error } = await supabase
     .from("profiles")
     .update(updateData)
-    .eq("id", userId);
+    .eq("id", user.id)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
-    console.error("Profile update error:", error.message);
-    throw new Error(error.message);
+    console.error("Profile update failed:", error.code);
+    throw new Error("プロフィールを更新できませんでした");
+  }
+  if (!updatedProfile) {
+    throw new Error("プロフィールが見つからないため更新できませんでした");
   }
 
-  // 変更を反映させるためにキャッシュを更新
-  revalidatePath(`/profile/${userId}`);
+  revalidatePath(`/profile/${user.id}`);
 }

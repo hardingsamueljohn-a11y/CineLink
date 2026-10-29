@@ -1,80 +1,64 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import { addToWishlist, removeFromWishlist } from '@/actions/wishlists';
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase/client";
+import { addToWishlist, removeFromWishlist } from "@/actions/wishlists";
 
-/**
- * 特定の映画のお気に入り状態を管理するフック
- * @param userId ログインユーザーのID
- * @param tmdbId 対象の映画のTMDB ID
- */
+/** Keep async results tied to both the authenticated user and the movie. */
 export const useWishlist = (userId: string | null, tmdbId: number) => {
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null); // エラー表示用に追加
+  const key = userId ? `${userId}:${tmdbId}` : null;
+  const [snapshot, setSnapshot] = useState<{ key: string; value: boolean } | null>(null);
+  const [pending, setPending] = useState(false);
+  const [failure, setFailure] = useState<{ key: string; message: string } | null>(null);
 
-  // お気に入り状態を取得する関数
-  const fetchWishlistStatus = useCallback(async () => {
-    if (!userId) {
-      setIsWishlisted(false);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('wishlists')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('tmdb_id', tmdbId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Wishlist check error:', error.message);
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    const requestKey = `${userId}:${tmdbId}`;
+    const load = async () => {
+      try {
+        const { data, error } = await supabase.from("wishlists").select("id")
+          .eq("user_id", userId).eq("tmdb_id", tmdbId).maybeSingle();
+        if (!active) return;
+        if (error) {
+          console.error("Wishlist lookup failed:", error.code);
+          setFailure({ key: requestKey, message: "お気に入りの状態を取得できませんでした" });
+        }
+        setSnapshot({ key: requestKey, value: !error && !!data });
+      } catch {
+        if (active) {
+          setFailure({ key: requestKey, message: "お気に入りの状態を取得できませんでした" });
+          setSnapshot({ key: requestKey, value: false });
+        }
       }
-      
-      // データが存在すれば登録済み
-      setIsWishlisted(!!data);
-    } catch (err) {
-      console.error('Unexpected error fetching wishlist status:', err);
-    } finally {
-      setLoading(false);
-    }
+    };
+    void load();
+    return () => { active = false; };
   }, [userId, tmdbId]);
 
-  // マウント時およびID変更時に状態を確認
-  useEffect(() => {
-    fetchWishlistStatus();
-  }, [fetchWishlistStatus]);
+  const isWishlisted = key !== null && snapshot?.key === key && snapshot.value;
+  const loading = pending || (key !== null && snapshot?.key !== key);
+  const error = failure?.key === key ? failure?.message ?? null : null;
 
-  // 追加・削除を切り替える関数
   const toggleWishlist = async () => {
-    setError(null); // 操作開始時にエラーをリセット
-
-    if (!userId) {
-      setError("ログインが必要です"); 
+    if (!key) {
+      // This message also works before a session has loaded.
+      setFailure({ key: "", message: "ログインが必要です" });
       return;
     }
-
-    // 楽観的アップデート（先に表示を切り替える）
+    if (loading) return;
+    setFailure(null);
+    setPending(true);
     const previousState = isWishlisted;
-    setIsWishlisted(!previousState);
-
+    setSnapshot({ key, value: !previousState });
     try {
-      if (previousState) {
-        // 登録済みの場合は削除
-        await removeFromWishlist(tmdbId);
-      } else {
-        // 未登録の場合は追加
-        await addToWishlist(tmdbId);
-      }
-    } catch (err) {
-      // 失敗した場合は元の状態に戻す
-      setIsWishlisted(previousState);
-      console.error('Wishlist toggle failed:', err);
-      setError("お気に入りの更新に失敗しました"); 
+      if (previousState) await removeFromWishlist(tmdbId);
+      else await addToWishlist(tmdbId);
+    } catch {
+      setSnapshot((current) => current?.key === key ? { key, value: previousState } : current);
+      setFailure({ key, message: "お気に入りの更新に失敗しました" });
+    } finally {
+      setPending(false);
     }
   };
 
-  return { isWishlisted, loading, error, toggleWishlist };
+  return { isWishlisted, loading, error: key === null && failure?.key === "" ? failure.message : error, toggleWishlist };
 };

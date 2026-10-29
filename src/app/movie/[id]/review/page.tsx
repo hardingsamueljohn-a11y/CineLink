@@ -2,6 +2,8 @@ import MovieBackButton from "@/components/movie/MovieBackButton";
 import ReviewForm from "@/components/review/ReviewForm";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Review } from "@/types/review";
+import { redirect } from "next/navigation";
+import { isTmdbId } from "@/lib/security/validation";
 
 type ReviewPageProps = {
   params: Promise<{
@@ -13,7 +15,7 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
   const { id } = await params;
   const tmdbId = Number(id);
 
-  if (Number.isNaN(tmdbId)) {
+  if (!isTmdbId(tmdbId)) {
     return (
       <main style={{ padding: "24px" }}>
         <p>不正な映画IDです。</p>
@@ -28,28 +30,29 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    redirect("/login");
+  }
+
   let existingReview: Review | null = null;
 
-  //✅ ログインしている場合だけ、自分のレビューがあるか探す
-  if (user) {
-    const { data, error } = await supabase
-      .from("reviews")
-      .select("id, user_id, tmdb_id, rating, content, is_spoiler, created_at")
-      .eq("tmdb_id", tmdbId)
-      .eq("user_id", user.id)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("id, user_id, tmdb_id, rating, content, is_spoiler, created_at")
+    .eq("tmdb_id", tmdbId)
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-    if (!error && data) {
-      existingReview = {
-        id: data.id,
-        userId: data.user_id,
-        tmdbId: data.tmdb_id,
-        rating: data.rating,
-        content: data.content,
-        isSpoiler: data.is_spoiler,
-        createdAt: data.created_at,
-      };
-    }
+  if (!error && data) {
+    existingReview = {
+      id: data.id,
+      userId: data.user_id,
+      tmdbId: data.tmdb_id,
+      rating: data.rating,
+      content: data.content,
+      isSpoiler: data.is_spoiler,
+      createdAt: data.created_at,
+    };
   }
 
   return (

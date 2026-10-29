@@ -115,7 +115,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           .from("wishlists")
           .select(
             `
-            *,
+            id, user_id, tmdb_id, status, created_at,
             profiles ( username, avatar_url ),
             movies ( title, poster_path )
           `,
@@ -172,7 +172,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   if (user) {
     const { data: wishlistData, error: wishlistError } = await supabase
       .from("wishlists")
-      .select("*")
+      .select("id, user_id, tmdb_id, status, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -184,7 +184,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       if (tmdbIds.length > 0) {
         const { data: moviesData, error: moviesError } = await supabase
           .from("movies")
-          .select("*")
+          .select("tmdb_id, title, poster_path")
           .in("tmdb_id", tmdbIds);
 
         if (!moviesError) {
