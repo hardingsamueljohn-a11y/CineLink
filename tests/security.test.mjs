@@ -211,3 +211,86 @@ test('Dashboard wrapper contains the exact canonical body, one transaction, and 
     assert.ok(sql.endsWith('COMMIT;\n'));
   }
 });
+
+test('user search preserves ordinary text and escapes each LIKE metacharacter', async () => {
+  const cases = [
+    ['  alice  ', '%alice%'],
+    ['%', '%\\%%'],
+    ['_', '%\\_%'],
+    ['\\', '%\\\\%'],
+    ['a%_\\b', '%a\\%\\_\\\\b%'],
+  ];
+  for (const [query, expectedPattern] of cases) {
+    const rows = [{ id: A, username: query.trim() }];
+    const db = client({ result: () => ({ data: rows, error: null }) });
+    const result = await actions('src/actions/profile.ts', db).searchUsers(query);
+    assert.equal(result, rows);
+    assert.equal(db.calls.length, 1);
+    assert.equal(db.calls[0].table, 'profiles');
+    assert.equal(db.calls[0].columns, 'id, username');
+    assert.deepEqual(db.calls[0].filters, [['username', expectedPattern]], 'query: ' + JSON.stringify(query));
+  }
+});
+
+test('profile accepts empty bio and bios through the 1000-character boundary', async () => {
+  for (const length of [0, 999, 1000]) {
+    const bio = 'あ'.repeat(length);
+    const db = client();
+    await actions('src/actions/profile.ts', db).updateProfile({ username: 'name', bio });
+    assert.equal(db.calls.length, 1);
+    assert.equal(db.calls[0].operation, 'update');
+    assert.equal(db.calls[0].payload.bio, bio);
+    assert.equal(db.calls[0].payload.bio.length, length);
+  }
+});
+
+test('profile rejects bios above 1000 characters without writing to the DB', async () => {
+  for (const length of [1001, 2000]) {
+    const db = client();
+    await assert.rejects(
+      actions('src/actions/profile.ts', db).updateProfile({ username: 'name', bio: 'あ'.repeat(length) }),
+      /1000文字/,
+    );
+    assert.equal(db.calls.length, 0);
+  }
+});
+
+test('profile rejects non-string bios without writing to the DB', async () => {
+  for (const bio of [undefined, null, 0, 123, false, true, [], ['text'], {}, { text: 'bio' }]) {
+    const db = client();
+    await assert.rejects(actions('src/actions/profile.ts', db).updateProfile({ username: 'name', bio }), /入力が不正/);
+    assert.equal(db.calls.length, 0);
+  }
+});
+
+test('profile rejects empty and whitespace-only usernames without writing to the DB', async () => {
+  for (const username of ['', '   ', '\t\r\n', '　']) {
+    const db = client();
+    await assert.rejects(actions('src/actions/profile.ts', db).updateProfile({ username, bio: 'Valid bio' }), /ユーザー名を入力/);
+    assert.equal(db.calls.length, 0);
+  }
+});
+
+test('profile bio remains intact on save and is rendered as escaped text by ProfileHeader', async () => {
+  const ProfileHeader = load('src/components/profile/ProfileHeader.tsx', {
+    'next/link': ({ children, ...props }) => React.createElement('a', props, children),
+    '@/components/profile/FollowButton': { default: () => null },
+    '@/components/profile/EditProfileModal': { default: () => null },
+  }).default;
+  const cases = [
+    ['映画 & 読書が好きです', '映画 &amp; 読書が好きです'],
+    ['<b>自己紹介</b><script>alert("bio")</script><img src=x onerror=alert(1)>',
+      '&lt;b&gt;自己紹介&lt;/b&gt;&lt;script&gt;alert(&quot;bio&quot;)&lt;/script&gt;&lt;img src=x onerror=alert(1)&gt;'],
+  ];
+  for (const [bio, escapedText] of cases) {
+    const db = client();
+    await actions('src/actions/profile.ts', db).updateProfile({ username: 'name', bio });
+    assert.equal(db.calls[0].payload.bio, bio);
+    const html = renderToStaticMarkup(React.createElement(ProfileHeader, {
+      userId: A, username: 'name', avatarUrl: null, bio: db.calls[0].payload.bio,
+      followingCount: 0, followerCount: 0, isMyProfile: false, initialIsFollowing: false,
+    }));
+    assert.ok(html.includes(escapedText));
+    assert.ok(!/<(?:script|img|b)\b/i.test(html), 'Bio must not become executable or formatted HTML');
+  }
+});
